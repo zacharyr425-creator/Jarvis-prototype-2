@@ -1,9 +1,9 @@
-<!DOCTYPE 
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>J.A.R.V.I.S. Core Interface v5.0</title>
+    <title>J.A.R.V.I.S. Interactive HUD</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap');
 
@@ -23,8 +23,8 @@
             display: flex;
             flex-direction: column;
             touch-action: none;
-            -webkit-user-select: none;
             user-select: none;
+            -webkit-user-select: none;
         }
 
         body::before {
@@ -108,18 +108,29 @@
 
         .hud-panel {
             position: absolute;
-            width: 280px;
-            max-width: 80vw;
+            width: 300px;
+            max-width: 85vw;
+            max-height: 65vh;
+            overflow-y: auto;
             background: rgba(0, 240, 255, 0.12);
             border: 1px solid #00f0ff;
             padding: 10px;
             border-radius: 6px;
             box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
             font-size: 0.8rem;
-            line-height: 1.3;
+            line-height: 1.35;
             backdrop-filter: blur(8px);
             z-index: 30;
             touch-action: none;
+            transition: width 0.3s ease, height 0.3s ease;
+        }
+
+        .hud-panel.expanded {
+            width: 340px;
+            max-width: 92vw;
+            max-height: 75vh;
+            border-color: #ffffff;
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.6);
         }
 
         .drag-header {
@@ -134,6 +145,7 @@
             border-radius: 5px 5px 0 0;
             cursor: move;
             touch-action: none;
+            sticky: top;
         }
 
         .drag-handle {
@@ -143,15 +155,25 @@
             flex-grow: 1;
         }
 
-        .close-btn {
-            background: rgba(255, 0, 85, 0.6);
-            border: 1px solid #ff0055;
+        .header-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .action-btn {
+            background: rgba(0, 240, 255, 0.3);
+            border: 1px solid #00f0ff;
             color: #fff;
             border-radius: 3px;
             padding: 1px 6px;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             cursor: pointer;
             font-family: 'Orbitron', sans-serif;
+        }
+
+        .close-btn {
+            background: rgba(255, 0, 85, 0.6);
+            border: 1px solid #ff0055;
         }
 
         .hud-panel h3 {
@@ -165,22 +187,30 @@
             text-transform: uppercase;
         }
 
-        .news-item {
+        .info-card {
             background: rgba(0, 240, 255, 0.08);
-            border-left: 2px solid #00f0ff;
-            padding: 6px;
-            margin-bottom: 6px;
+            border-left: 3px solid #00f0ff;
+            padding: 8px;
+            margin-bottom: 8px;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            transition: background 0.2s;
         }
 
-        .news-item strong {
-            color: #fff;
+        .info-card:hover, .info-card:active {
+            background: rgba(0, 240, 255, 0.2);
+        }
+
+        .info-card strong {
+            color: #ffffff;
             display: block;
+            margin-bottom: 4px;
             font-size: 0.8rem;
         }
 
-        .news-item p {
+        .info-card p {
             color: #b0efff;
-            font-size: 0.72rem;
+            font-size: 0.75rem;
         }
 
         .arc-container {
@@ -248,8 +278,8 @@
             font-size: 0.85rem;
             outline: none;
             border-radius: 4px;
-            -webkit-user-select: text;
             user-select: text;
+            -webkit-user-select: text;
         }
 
         button {
@@ -276,7 +306,7 @@
 
     <div id="loader">
         <div class="loader-ring"></div>
-        <div class="loader-text">INITIALIZING STARK HUD v5.0...</div>
+        <div class="loader-text">INITIALIZING STARK HUD...</div>
     </div>
 
     <div id="hud-container">
@@ -296,7 +326,7 @@
         <div class="terminal-area">
             <div id="log" class="log-box">SYSTEM: Online and awaiting directives...</div>
             <div class="controls">
-                <input type="text" id="userInput" placeholder="Type or tap MIC (e.g. 'nfl news', 'einstein')..." onkeydown="if(event.key==='Enter') processInput()">
+                <input type="text" id="userInput" placeholder="Ask JARVIS (e.g., 'NBA news', 'White House', 'enlarge')..." onkeydown="if(event.key==='Enter') processInput()">
                 <button onclick="processInput()">SEND</button>
                 <button onclick="startVoice()">MIC</button>
             </div>
@@ -305,24 +335,26 @@
 
     <script>
         let topZIndex = 100;
+        let activePanel = null;
 
-        // --- Drag Engine for Touch and Mouse ---
+        // --- Touch & Mouse Drag Engine ---
         function makeDraggable(element) {
             const handle = element.querySelector('.drag-header') || element;
-            let startX = 0, startY = 0, currentLeft = 0, currentTop = 0;
+            let startX = 0, startY = 0, initialX = 0, initialY = 0;
 
             function onStart(e) {
-                if (e.target.classList.contains('close-btn')) return;
+                if (e.target.classList.contains('action-btn') || e.target.classList.contains('close-btn')) return;
 
                 topZIndex++;
                 element.style.zIndex = topZIndex;
+                activePanel = element;
 
                 const touch = e.touches ? e.touches[0] : e;
                 startX = touch.clientX;
                 startY = touch.clientY;
 
-                currentLeft = element.offsetLeft;
-                currentTop = element.offsetTop;
+                initialX = element.offsetLeft;
+                initialY = element.offsetTop;
 
                 window.addEventListener('mousemove', onMove);
                 window.addEventListener('mouseup', onEnd);
@@ -334,11 +366,11 @@
                 if (e.cancelable) e.preventDefault();
                 const touch = e.touches ? e.touches[0] : e;
 
-                const deltaX = touch.clientX - startX;
-                const deltaY = touch.clientY - startY;
+                const dx = touch.clientX - startX;
+                const dy = touch.clientY - startY;
 
-                element.style.left = (currentLeft + deltaX) + 'px';
-                element.style.top = (currentTop + deltaY) + 'px';
+                element.style.left = (initialX + dx) + 'px';
+                element.style.top = (initialY + dy) + 'px';
                 element.style.right = 'auto';
             }
 
@@ -353,14 +385,14 @@
             handle.addEventListener('touchstart', onStart, { passive: false });
         }
 
-        // --- Clock & Loader ---
+        // --- Clock & Loader Setup ---
         setTimeout(() => {
             const loader = document.getElementById('loader');
             if (loader) {
                 loader.style.opacity = '0';
                 setTimeout(() => loader.style.display = 'none', 500);
             }
-            speak("System online, Sir.");
+            speak("System online, Sir. Awaiting input.");
         }, 1200);
 
         setInterval(() => {
@@ -382,8 +414,47 @@
             } catch (e) {}
         }
 
-        // --- Panel Creation & Layout ---
-        function createPanel(titleHTML, side = 'right') {
+        // --- Panel Repositioning Mechanics ---
+        function applyPanelPosition(panel, pos) {
+            const workspace = document.getElementById('workspace');
+            const wWidth = workspace.clientWidth;
+            const wHeight = workspace.clientHeight;
+            const pWidth = Math.min(300, wWidth * 0.85);
+            const pHeight = 220;
+
+            switch (pos) {
+                case 'left':
+                    panel.style.left = '10px';
+                    panel.style.top = Math.max(10, (wHeight - pHeight) / 2) + 'px';
+                    break;
+                case 'right':
+                    panel.style.left = Math.max(10, wWidth - pWidth - 10) + 'px';
+                    panel.style.top = Math.max(10, (wHeight - pHeight) / 2) + 'px';
+                    break;
+                case 'top':
+                    panel.style.left = Math.max(10, (wWidth - pWidth) / 2) + 'px';
+                    panel.style.top = '10px';
+                    break;
+                case 'bottom':
+                    panel.style.left = Math.max(10, (wWidth - pWidth) / 2) + 'px';
+                    panel.style.top = Math.max(10, wHeight - pHeight - 10) + 'px';
+                    break;
+                case 'middle':
+                case 'center':
+                default:
+                    panel.style.left = Math.max(10, (wWidth - pWidth) / 2) + 'px';
+                    panel.style.top = Math.max(10, (wHeight - pHeight) / 2) + 'px';
+                    break;
+            }
+        }
+
+        function toggleEnlarge(btn) {
+            const panel = btn.closest('.hud-panel');
+            panel.classList.toggle('expanded');
+            btn.innerText = panel.classList.contains('expanded') ? 'SHRINK' : 'MAX';
+        }
+
+        function createPanel(titleHTML, pos = 'right') {
             const workspace = document.getElementById('workspace');
             const panel = document.createElement('div');
             panel.className = 'hud-panel';
@@ -393,27 +464,22 @@
             panel.innerHTML = `
                 <div class="drag-header">
                     <span class="drag-handle">::: DRAG :::</span>
-                    <button class="close-btn" onclick="this.closest('.hud-panel').remove()">X</button>
+                    <div class="header-actions">
+                        <button class="action-btn" onclick="toggleEnlarge(this)">MAX</button>
+                        <button class="action-btn close-btn" onclick="this.closest('.hud-panel').remove()">X</button>
+                    </div>
                 </div>
                 ${titleHTML}
             `;
 
             workspace.appendChild(panel);
             makeDraggable(panel);
-
-            // Side positioning
-            const workspaceWidth = workspace.clientWidth;
-            if (side === 'left') {
-                panel.style.left = '10px';
-            } else {
-                panel.style.left = Math.max(10, workspaceWidth - 290) + 'px';
-            }
-            panel.style.top = '20px';
-
+            applyPanelPosition(panel, pos);
+            activePanel = panel;
             return panel;
         }
 
-        // --- Command Processor ---
+        // --- Command & NLP Engine ---
         async function processInput() {
             const inputField = document.getElementById('userInput');
             if (!inputField) return;
@@ -423,77 +489,111 @@
             inputField.value = '';
             const textLower = rawText.toLowerCase();
 
+            // 1. Clear Directive
             if (textLower.includes('clear') || textLower.includes('close')) {
                 document.querySelectorAll('.hud-panel').forEach(p => p.remove());
-                speak("Cleared HUD panels.");
+                speak("Cleared active HUD windows.");
                 return;
             }
 
-            let side = textLower.includes('left') ? 'left' : 'right';
+            // 2. Enlarge / Resize Directive
+            if (textLower.includes('enlarge') || textLower.includes('expand') || textLower.includes('make bigger')) {
+                if (activePanel) {
+                    activePanel.classList.add('expanded');
+                    speak("Enlarging telemetry module, Sir.");
+                    return;
+                }
+            }
 
-            // Clean query text
-            let query = rawText.replace(/on the left|on left|on the right|on right|show me|give me|latest news on|news|search/gi, '').trim();
-            if (!query) query = "NFL";
+            // 3. Move / Reposition Directive
+            const isMoveOnly = textLower.includes('move') || textLower.includes('put it') || textLower.includes('shift');
+            let detectedPos = null;
+            if (textLower.includes('left')) detectedPos = 'left';
+            else if (textLower.includes('right')) detectedPos = 'right';
+            else if (textLower.includes('top')) detectedPos = 'top';
+            else if (textLower.includes('bottom')) detectedPos = 'bottom';
+            else if (textLower.includes('middle') || textLower.includes('center')) detectedPos = 'middle';
 
-            speak("Accessing telemetry for " + query + ".");
-            await fetchTelemetryData(query, side);
+            if (isMoveOnly && activePanel && detectedPos) {
+                applyPanelPosition(activePanel, detectedPos);
+                speak("Repositioned to the " + detectedPos + ".");
+                return;
+            }
+
+            // 4. Topic Extraction
+            let targetPos = detectedPos || 'right';
+            let query = rawText.replace(/hi jarvis|jarvis|move this to the|move to the|put this on the|move this|on the left|on left|on the right|on right|on top|at top|on bottom|at bottom|in the middle|in center|to the left|to the right|show me|tell me about|what is|who is|search for|add the latest|add latest|get latest|news about|news on/gi, '').trim();
+
+            if (!query) query = "Latest News";
+
+            speak("Fetching live telemetry for " + query + ".");
+            await fetchUniversalTelemetry(query, targetPos);
         }
 
-        // --- API Data Fetching ---
-        async function fetchTelemetryData(query, side) {
-            const panel = createPanel(`<h3>SEARCHING: ${query.toUpperCase()}</h3><p>Connecting to feeds...</p>`, side);
+        // --- Universal Data Fetching Engine ---
+        async function fetchUniversalTelemetry(query, pos) {
+            const panel = createPanel(`<h3>TELEMETRY: ${query.toUpperCase()}</h3><p>Querying external nodes...</p>`, pos);
             const qLower = query.toLowerCase();
 
-            // 1. ESPN NFL Integration
-            if (qLower.includes('nfl') || qLower.includes('football') || qLower.includes('sports')) {
+            // 1. Sports Specific API (NBA & NFL via ESPN)
+            if (qLower.includes('nba') || qLower.includes('nfl') || qLower.includes('falcons') || qLower.includes('basketball') || qLower.includes('football')) {
+                const league = (qLower.includes('nba') || qLower.includes('basketball')) ? 'basketball/nba' : 'football/nfl';
                 try {
-                    const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/news');
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data.articles && data.articles.length > 0) {
-                            let content = `<h3>NFL NEWS FEED</h3>`;
-                            data.articles.slice(0, 3).forEach(item => {
-                                content += `
-                                    <div class="news-item">
+                    const espnRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${league}/news`);
+                    if (espnRes.ok) {
+                        const espnData = await espnRes.json();
+                        if (espnData.articles && espnData.articles.length > 0) {
+                            let articlesHTML = `<h3>${league.split('/')[1].toUpperCase()} TELEMETRY</h3>`;
+                            espnData.articles.slice(0, 4).forEach(item => {
+                                articlesHTML += `
+                                    <div class="info-card" onclick="this.classList.toggle('expanded-card')">
                                         <strong>${item.headline}</strong>
-                                        <p>${item.description || 'Live ESPN headline.'}</p>
+                                        <p>${item.description || 'Tap to expand headline detail.'}</p>
                                     </div>
                                 `;
                             });
                             panel.innerHTML = `
                                 <div class="drag-header">
                                     <span class="drag-handle">::: DRAG :::</span>
-                                    <button class="close-btn" onclick="this.closest('.hud-panel').remove()">X</button>
+                                    <div class="header-actions">
+                                        <button class="action-btn" onclick="toggleEnlarge(this)">MAX</button>
+                                        <button class="action-btn close-btn" onclick="this.closest('.hud-panel').remove()">X</button>
+                                    </div>
                                 </div>
-                                ${content}
+                                ${articlesHTML}
                             `;
-                            speak("NFL news telemetry updated.");
+                            speak(`${league.split('/')[1].toUpperCase()} telemetry loaded, Sir.`);
                             return;
                         }
                     }
                 } catch (e) {}
             }
 
-            // 2. Wikipedia Integration
+            // 2. Wikipedia API Engine (White House, Science, People, Entities)
             try {
-                const searchRes = await fetch('https://en.wikipedia.org/w/api.php?action=opensearch&search=' + encodeURIComponent(query) + '&limit=1&namespace=0&format=json&origin=*');
-                if (searchRes.ok) {
-                    const searchData = await searchRes.json();
-                    if (searchData && searchData[1] && searchData[1].length > 0) {
-                        const pageTitle = searchData[1][0];
+                const wikiRes = await fetch('https://en.wikipedia.org/w/api.php?action=opensearch&search=' + encodeURIComponent(query) + '&limit=1&namespace=0&format=json&origin=*');
+                if (wikiRes.ok) {
+                    const wikiData = await wikiRes.json();
+                    if (wikiData && wikiData[1] && wikiData[1].length > 0) {
+                        const pageTitle = wikiData[1][0];
                         const summaryRes = await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(pageTitle));
                         if (summaryRes.ok) {
-                            const wikiData = await summaryRes.json();
-                            if (wikiData.extract) {
+                            const summaryData = await summaryRes.json();
+                            if (summaryData.extract) {
                                 panel.innerHTML = `
                                     <div class="drag-header">
                                         <span class="drag-handle">::: DRAG :::</span>
-                                        <button class="close-btn" onclick="this.closest('.hud-panel').remove()">X</button>
+                                        <div class="header-actions">
+                                            <button class="action-btn" onclick="toggleEnlarge(this)">MAX</button>
+                                            <button class="action-btn close-btn" onclick="this.closest('.hud-panel').remove()">X</button>
+                                        </div>
                                     </div>
-                                    <h3>${wikiData.title.toUpperCase()}</h3>
-                                    <p>${wikiData.extract}</p>
+                                    <h3>${summaryData.title.toUpperCase()}</h3>
+                                    <div class="info-card">
+                                        <p>${summaryData.extract}</p>
+                                    </div>
                                 `;
-                                speak(wikiData.extract.substring(0, 100) + '...');
+                                speak(summaryData.extract.substring(0, 110) + '...');
                                 return;
                             }
                         }
@@ -501,20 +601,50 @@
                 }
             } catch (e) {}
 
-            // Fallback Panel
+            // 3. DuckDuckGo Instant Answer Fallback
+            try {
+                const ddgRes = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&origin=*`);
+                if (ddgRes.ok) {
+                    const ddgData = await ddgRes.json();
+                    if (ddgData.AbstractText) {
+                        panel.innerHTML = `
+                            <div class="drag-header">
+                                <span class="drag-handle">::: DRAG :::</span>
+                                <div class="header-actions">
+                                    <button class="action-btn" onclick="toggleEnlarge(this)">MAX</button>
+                                    <button class="action-btn close-btn" onclick="this.closest('.hud-panel').remove()">X</button>
+                                </div>
+                            </div>
+                            <h3>${query.toUpperCase()}</h3>
+                            <div class="info-card">
+                                <p>${ddgData.AbstractText}</p>
+                            </div>
+                        `;
+                        speak("Data feed synchronized.");
+                        return;
+                    }
+                }
+            } catch (e) {}
+
+            // 4. Default Telemetry Readout
             panel.innerHTML = `
                 <div class="drag-header">
                     <span class="drag-handle">::: DRAG :::</span>
-                    <button class="close-btn" onclick="this.closest('.hud-panel').remove()">X</button>
+                    <div class="header-actions">
+                        <button class="action-btn" onclick="toggleEnlarge(this)">MAX</button>
+                        <button class="action-btn close-btn" onclick="this.closest('.hud-panel').remove()">X</button>
+                    </div>
                 </div>
                 <h3>TELEMETRY: ${query.toUpperCase()}</h3>
-                <p>• Data stream initialized.</p>
-                <p>• Ready for query: ${query}</p>
+                <div class="info-card">
+                    <strong>SYSTEM FEED ACTIVE</strong>
+                    <p>Live stream established for '${query}'.</p>
+                </div>
             `;
-            speak("Telemetry readout generated.");
+            speak("Telemetry readout generated for " + query + ".");
         }
 
-        // --- Voice Mic Handler ---
+        // --- Voice Mic Interface ---
         function startVoice() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
@@ -536,7 +666,7 @@
             };
 
             recognition.onerror = () => {
-                speak("Voice recognition error.");
+                speak("Voice input error, Sir.");
             };
         }
     </script>
