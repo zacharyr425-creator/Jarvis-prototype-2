@@ -11,7 +11,6 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            user-select: none;
         }
 
         html, body {
@@ -23,6 +22,7 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            touch-action: none; /* Prevents unwanted mobile scrolling while dragging */
         }
 
         body::before {
@@ -106,86 +106,63 @@
             height: 100%;
         }
 
-        /* Center Arc Reactor Dynamic Background */
-        .arc-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            z-index: 1;
-            opacity: 0.7;
-        }
-
-        .arc-reactor {
-            width: 130px;
-            height: 130px;
-            border-radius: 50%;
-            border: 2px dashed #00f0ff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            animation: spin 20s linear infinite;
-            box-shadow: 0 0 25px rgba(0, 240, 255, 0.4);
-        }
-
-        .arc-core {
-            width: 65px;
-            height: 65px;
-            border-radius: 50%;
-            background: radial-gradient(circle, #ffffff 0%, #00f0ff 60%, rgba(0,240,255,0) 100%);
-            box-shadow: 0 0 30px #00f0ff;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        /* Floating Draggable Panels */
         .hud-panel {
             position: absolute;
             width: 300px;
-            max-height: 350px;
-            background: rgba(4, 20, 40, 0.85);
+            background: rgba(0, 240, 255, 0.12);
             border: 1px solid #00f0ff;
+            padding: 12px;
             border-radius: 6px;
-            box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
             font-size: 0.85rem;
             line-height: 1.4;
-            display: flex;
-            flex-direction: column;
-            z-index: 50;
-            overflow: hidden;
+            backdrop-filter: blur(8px);
+            z-index: 30;
+            transition: box-shadow 0.2s ease, top 0.3s ease, left 0.3s ease;
+        }
+
+        .hud-panel:active {
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.6);
+        }
+
+        .drag-handle {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            background: rgba(0, 240, 255, 0.2);
+            color: #ffffff;
+            text-align: center;
+            padding: 4px;
+            margin: -12px -12px 8px -12px;
+            border-bottom: 1px solid #00f0ff;
+            border-radius: 5px 5px 0 0;
+            cursor: grab;
+            user-select: none;
             touch-action: none;
         }
 
-        .panel-header {
-            background: rgba(0, 240, 255, 0.2);
-            padding: 8px 10px;
-            cursor: move;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #00f0ff;
+        .drag-handle:active {
+            cursor: grabbing;
+            background: rgba(0, 240, 255, 0.4);
+        }
+
+        .hud-panel h3 {
             font-family: 'Orbitron', sans-serif;
-            font-size: 0.8rem;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.4);
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            font-size: 0.9rem;
             color: #ffffff;
             text-shadow: 0 0 8px #00f0ff;
             text-transform: uppercase;
         }
 
-        .close-btn {
-            background: transparent;
-            border: none;
-            color: #ff4d4d;
-            font-weight: bold;
-            cursor: pointer;
-            padding: 0 4px;
-            font-size: 0.9rem;
-        }
-
-        .panel-body {
-            padding: 10px;
-            overflow-y: auto;
-            flex: 1;
-            user-select: text;
+        .calendar-frame {
+            width: 100%;
+            height: 200px;
+            border: 1px solid rgba(0, 240, 255, 0.4);
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.3);
         }
 
         .news-card {
@@ -216,11 +193,41 @@
             font-weight: bold;
         }
 
+        .arc-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 15;
+        }
+
+        .arc-reactor {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 2px dashed #00f0ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: spin 20s linear infinite;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+        }
+
+        .arc-core {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffffff 0%, #00f0ff 60%, rgba(0,240,255,0) 100%);
+            box-shadow: 0 0 30px #00f0ff;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
         .terminal-area {
             display: flex;
             flex-direction: column;
             gap: 6px;
-            height: 90px;
+            height: 95px;
             z-index: 20;
         }
 
@@ -230,7 +237,7 @@
             color: #7df9ff;
             font-size: 0.85rem;
             text-shadow: 0 0 5px #00f0ff;
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.4);
             padding: 6px;
             border-radius: 4px;
             border: 1px solid rgba(0, 240, 255, 0.2);
@@ -251,7 +258,6 @@
             font-size: 0.9rem;
             outline: none;
             border-radius: 4px;
-            user-select: text;
         }
 
         button {
@@ -294,12 +300,26 @@
                     <div class="arc-core"></div>
                 </div>
             </div>
+
+            <div id="panel-status" class="hud-panel" style="top: 20px; left: 20px;">
+                <div class="drag-handle">::: DRAG :::</div>
+                <h3>SYSTEM STATUS</h3>
+                <p>• Core Engine: Active</p>
+                <p>• Neural Link: Operational</p>
+                <p>• Satellite Uplink: Connected</p>
+            </div>
+
+            <div id="panel-telemetry" class="hud-panel" style="top: 20px; right: 20px; left: auto;">
+                <div class="drag-handle">::: DRAG :::</div>
+                <h3>TELEMETRY STREAM</h3>
+                <div>Awaiting input query...</div>
+            </div>
         </div>
 
         <div class="terminal-area">
             <div id="log" class="log-box">SYSTEM: Online and awaiting directives...</div>
             <div class="controls">
-                <input type="text" id="userInput" placeholder="Ask JARVIS (e.g. 'open sports on left', 'show calendar')..." onkeydown="if(event.key==='Enter') processInput()">
+                <input type="text" id="userInput" placeholder="Ask JARVIS (e.g. 'put sports on left', 'who is Albert Einstein')..." onkeydown="if(event.key==='Enter') processInput()">
                 <button onclick="processInput()">SEND</button>
                 <button onclick="startVoice()">MIC</button>
             </div>
@@ -308,9 +328,65 @@
 
     <script>
         let availableVoices = [];
-        let windowOffset = 0;
-        let highestZIndex = 100;
+        let topZIndex = 100;
 
+        // --- Drag and Drop Functionality (Touch & Mouse Support) ---
+        function makeDraggable(element) {
+            const handle = element.querySelector('.drag-handle') || element;
+            let startX = 0, startY = 0, initialLeft = 0, initialTop = 0;
+
+            const onStart = (e) => {
+                // Elevate panel to the top of stacking order
+                topZIndex++;
+                element.style.zIndex = topZIndex;
+
+                const event = e.touches ? e.touches[0] : e;
+                startX = event.clientX;
+                startY = event.clientY;
+
+                const rect = element.getBoundingClientRect();
+                const workspaceRect = document.getElementById('workspace').getBoundingClientRect();
+
+                initialLeft = rect.left - workspaceRect.left;
+                initialTop = rect.top - workspaceRect.top;
+
+                // Disable CSS transitions during drag for real-time response
+                element.style.transition = 'none';
+
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('mouseup', onEnd);
+                window.addEventListener('touchmove', onMove, { passive: false });
+                window.addEventListener('touchend', onEnd);
+            };
+
+            const onMove = (e) => {
+                if (e.cancelable) e.preventDefault();
+                const event = e.touches ? e.touches[0] : e;
+
+                const deltaX = event.clientX - startX;
+                const deltaY = event.clientY - startY;
+
+                element.style.left = `${initialLeft + deltaX}px`;
+                element.style.top = `${initialTop + deltaY}px`;
+                element.style.right = 'auto'; // Disable CSS right positioning if active
+            };
+
+            const onEnd = () => {
+                element.style.transition = 'box-shadow 0.2s ease, top 0.3s ease, left 0.3s ease';
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onEnd);
+                window.removeEventListener('touchmove', onMove);
+                window.removeEventListener('touchend', onEnd);
+            };
+
+            handle.addEventListener('mousedown', onStart);
+            handle.addEventListener('touchstart', onStart, { passive: false });
+        }
+
+        // Apply drag listeners to initial panels on startup
+        document.querySelectorAll('.hud-panel').forEach(makeDraggable);
+
+        // --- System Initialization ---
         setTimeout(() => {
             const loader = document.getElementById('loader');
             if (loader) {
@@ -351,6 +427,45 @@
             if (log) log.innerText = "JARVIS: " + text;
         }
 
+        // --- Layout Control Engine ---
+        function setPanelPosition(panel, position) {
+            const workspace = document.getElementById('workspace');
+            const wWidth = workspace.clientWidth;
+            const wHeight = workspace.clientHeight;
+            const pWidth = 300;
+            const pHeight = 220;
+
+            panel.style.right = 'auto'; // Reset right anchor
+
+            switch (position) {
+                case 'left':
+                    panel.style.left = '20px';
+                    panel.style.top = `${(wHeight - pHeight) / 2}px`;
+                    break;
+                case 'right':
+                    panel.style.left = `${wWidth - pWidth - 20}px`;
+                    panel.style.top = `${(wHeight - pHeight) / 2}px`;
+                    break;
+                case 'top':
+                    panel.style.left = `${(wWidth - pWidth) / 2}px`;
+                    panel.style.top = '20px';
+                    break;
+                case 'bottom':
+                    panel.style.left = `${(wWidth - pWidth) / 2}px`;
+                    panel.style.top = `${wHeight - pHeight - 20}px`;
+                    break;
+                case 'middle':
+                case 'center':
+                    panel.style.left = `${(wWidth - pWidth) / 2}px`;
+                    panel.style.top = `${(wHeight - pHeight) / 2}px`;
+                    break;
+                default:
+                    panel.style.left = `${wWidth - pWidth - 20}px`;
+                    panel.style.top = '20px';
+            }
+        }
+
+        // --- Command Processing ---
         async function processInput() {
             const inputField = document.getElementById('userInput');
             if (!inputField) return;
@@ -360,139 +475,80 @@
             inputField.value = '';
             const qLower = query.toLowerCase();
 
-            // Clear layout command
-            if (qLower.includes('clear') || qLower.includes('close all')) {
+            // Clear layout action
+            if (qLower.includes('clear') || qLower.includes('close')) {
                 document.querySelectorAll('.hud-panel').forEach(p => p.remove());
-                speak("Clearing all active HUD windows.");
+                speak("Clearing active HUD windows.");
                 return;
             }
+
+            // Detect target position in screen space
+            let position = 'right';
+            if (qLower.includes('left')) position = 'left';
+            else if (qLower.includes('right')) position = 'right';
+            else if (qLower.includes('top')) position = 'top';
+            else if (qLower.includes('bottom')) position = 'bottom';
+            else if (qLower.includes('middle') || qLower.includes('center')) position = 'middle';
+
+            // Clean term from movement phrases
+            let searchTerm = query.replace(/on the left|on left|to the left|on the right|on right|to the right|on top|at the top|on bottom|at the bottom|in the middle|in center/gi, '')
+                                 .replace(/open|show|search|put|move/gi, '').trim();
+
+            if (!searchTerm) searchTerm = "Telemetry";
 
             // Calendar command
             if (qLower.includes('calendar') || qLower.includes('schedule')) {
-                showCalendar();
+                showCalendar(position);
                 return;
             }
 
-            // Side placement check
-            let side = 'auto';
-            let searchTerm = query;
-
-            if (qLower.includes('left')) {
-                side = 'left';
-                searchTerm = query.replace(/on the left|on left/gi, '').replace(/open|show|search/gi, '').trim();
-            } else if (qLower.includes('right')) {
-                side = 'right';
-                searchTerm = query.replace(/on the right|on right/gi, '').replace(/open|show|search/gi, '').trim();
-            } else {
-                searchTerm = query.replace(/open|show|search/gi, '').trim();
-            }
-
-            speak("Accessing telemetry for " + searchTerm + ", Sir.");
-            await fetchAndRenderData(searchTerm, side);
+            speak(`Accessing intelligence for ${searchTerm} on screen, Sir.`);
+            await fetchAndRenderData(searchTerm, position);
         }
 
-        function createDraggablePanel(title, side) {
+        function createHudPanel(titleHTML, position) {
             const workspace = document.getElementById('workspace');
             const panel = document.createElement('div');
             panel.className = 'hud-panel';
-            panel.style.zIndex = ++highestZIndex;
-
-            // Position Logic
-            const rect = workspace.getBoundingClientRect();
-            let topPos = 20 + (windowOffset % 150);
-            let leftPos = 20;
-
-            if (side === 'left') {
-                leftPos = 20;
-            } else if (side === 'right') {
-                leftPos = Math.max(20, rect.width - 320);
-            } else {
-                leftPos = 20 + (windowOffset % 200);
-            }
-            windowOffset += 30;
-
-            panel.style.top = topPos + 'px';
-            panel.style.left = leftPos + 'px';
+            topZIndex++;
+            panel.style.zIndex = topZIndex;
 
             panel.innerHTML = `
-                <div class="panel-header">
-                    <span>${title}</span>
-                    <button class="close-btn" onclick="this.closest('.hud-panel').remove()">✕</button>
-                </div>
-                <div class="panel-body">
-                    <p>Connecting to satellite feeds...</p>
-                </div>
+                <div class="drag-handle">::: DRAG :::</div>
+                ${titleHTML}
             `;
 
             workspace.appendChild(panel);
-            makeElementDraggable(panel);
-
-            // Focus panel when clicked
-            panel.addEventListener('pointerdown', () => {
-                panel.style.zIndex = ++highestZIndex;
-            });
-
+            makeDraggable(panel);
+            setPanelPosition(panel, position);
             return panel;
         }
 
-        function makeElementDraggable(elmnt) {
-            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-            const header = elmnt.querySelector('.panel-header');
-
-            if (header) {
-                header.onpointerdown = dragPointerStart;
-            }
-
-            function dragPointerStart(e) {
-                e.preventDefault();
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                document.onpointermove = elementDrag;
-                document.onpointerup = closeDragElement;
-            }
-
-            function elementDrag(e) {
-                e.preventDefault();
-                pos1 = pos3 - e.clientX;
-                pos2 = pos4 - e.clientY;
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-
-                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
-            }
-
-            function closeDragElement() {
-                document.onpointermove = null;
-                document.onpointerup = null;
-            }
-        }
-
-        function showCalendar() {
-            const panel = createDraggablePanel('FAMILY CALENDAR', 'left');
-            const body = panel.querySelector('.panel-body');
-            body.innerHTML = `
-                <p style="margin-bottom:10px; color:#7df9ff;">[Calendar Uplink Ready]</p>
-                <div style="height:180px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(0,240,255,0.4); border-radius:4px;">
+        function showCalendar(position) {
+            const content = `
+                <h3>FAMILY CALENDAR</h3>
+                <p style="margin-bottom:10px; color:#7df9ff;">[Calendar Uplink Ready - Paste Google Calendar embed URL when available]</p>
+                <div class="calendar-frame" style="display:flex; align-items:center; justify-content:center;">
                     <span style="opacity:0.6;">📅 CALENDAR PLACEHOLDER</span>
                 </div>
             `;
+            createHudPanel(content, position);
             speak("Displaying family calendar, Sir.");
         }
 
-        async function fetchAndRenderData(term, side) {
-            const panel = createDraggablePanel(term.toUpperCase(), side);
-            const body = panel.querySelector('.panel-body');
+        // --- Expanded Knowledge Engine ---
+        async function fetchAndRenderData(term, position) {
+            const newPanel = createHudPanel(`<h3>SEARCHING: ${term.toUpperCase()}</h3><p>Connecting to global knowledge feeds...</p>`, position);
             const qLower = term.toLowerCase();
 
-            // 1. ESPN Football API
+            // 1. ESPN NFL Sports Feed
             if (qLower.includes('nfl') || qLower.includes('football') || qLower.includes('sports') || qLower.includes('espn')) {
                 try {
                     const espnRes = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/news');
                     if (espnRes.ok) {
                         const espnData = await espnRes.json();
                         if (espnData.articles && espnData.articles.length > 0) {
-                            renderArticles(body, espnData.articles.slice(0, 3).map(a => ({
+                            renderArticles(newPanel, "NFL TELEMETRY", espnData.articles.slice(0, 3).map(a => ({
                                 title: a.headline,
                                 desc: a.description || 'Live coverage update from ESPN.',
                                 link: (a.links && a.links.web) ? a.links.web.href : '#'
@@ -504,7 +560,7 @@
                 } catch (e) {}
             }
 
-            // 2. Wikipedia API
+            // 2. Wikipedia Detailed Knowledge API
             try {
                 const searchRes = await fetch('https://en.wikipedia.org/w/api.php?action=opensearch&search=' + encodeURIComponent(term) + '&limit=1&namespace=0&format=json&origin=*');
                 if (searchRes.ok) {
@@ -515,8 +571,12 @@
                         if (summaryRes.ok) {
                             const wikiData = await summaryRes.json();
                             if (wikiData.extract) {
-                                body.innerHTML = '<p>' + wikiData.extract + '</p>' +
-                                    (wikiData.content_urls?.desktop?.page ? '<br><a href="' + wikiData.content_urls.desktop.page + '" target="_blank" style="color:#00f0ff;">VIEW SOURCE ARTICLE ➔</a>' : '');
+                                newPanel.innerHTML = `
+                                    <div class="drag-handle">::: DRAG :::</div>
+                                    <h3>${wikiData.title.toUpperCase()}</h3>
+                                    <p>${wikiData.extract}</p>
+                                    ${wikiData.content_urls?.desktop?.page ? `<br><a href="${wikiData.content_urls.desktop.page}" target="_blank" style="color:#00f0ff;">VIEW SOURCE ARTICLE ➔</a>` : ''}
+                                `;
                                 const spokenText = wikiData.extract.length > 140 ? wikiData.extract.substring(0, 140) + '...' : wikiData.extract;
                                 speak(spokenText);
                                 return;
@@ -526,27 +586,48 @@
                 }
             } catch (e) {}
 
-            // Fallback
-            body.innerHTML = 
-                '<p>• Query Processed: "' + term + '"</p>' +
-                '<p>• Analysis complete. Launching search option...</p>' +
-                '<br><a href="https://www.google.com/search?q=' + encodeURIComponent(term) + '" target="_blank" style="color:#00f0ff; font-weight:bold;">LAUNCH WEB SEARCH ➔</a>';
-            
+            // 3. DuckDuckGo Knowledge & Definition Search API (Fallback knowledge source)
+            try {
+                const ddgRes = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(term)}&format=json&origin=*`);
+                if (ddgRes.ok) {
+                    const ddgData = await ddgRes.json();
+                    if (ddgData.AbstractText) {
+                        newPanel.innerHTML = `
+                            <div class="drag-handle">::: DRAG :::</div>
+                            <h3>${(ddgData.Heading || term).toUpperCase()}</h3>
+                            <p>${ddgData.AbstractText}</p>
+                            <br><a href="${ddgData.AbstractURL}" target="_blank" style="color:#00f0ff;">VIEW SOURCE ARTICLE ➔</a>
+                        `;
+                        speak(ddgData.AbstractText.substring(0, 140) + '...');
+                        return;
+                    }
+                }
+            } catch (e) {}
+
+            // 4. Web Search Link Fallback
+            newPanel.innerHTML = `
+                <div class="drag-handle">::: DRAG :::</div>
+                <h3>TELEMETRY: ${term.toUpperCase()}</h3>
+                <p>• Query Processed: "${term}"</p>
+                <p>• Knowledge query complete. Opening direct web search link...</p>
+                <br><a href="https://www.google.com/search?q=${encodeURIComponent(term)}" target="_blank" style="color:#00f0ff; font-weight:bold;">LAUNCH WEB SEARCH ➔</a>
+            `;
             speak("Telemetry analyzed for " + term + ", Sir.");
         }
 
-        function renderArticles(container, items) {
-            let html = '';
+        function renderArticles(container, title, items) {
+            let html = `<div class="drag-handle">::: DRAG :::</div><h3>${title}</h3>`;
             items.forEach(item => {
-                html += '<div class="news-card">' +
-                            '<strong>' + item.title + '</strong>' +
-                            '<p>' + item.desc + '</p>' +
-                            '<a href="' + item.link + '" target="_blank">READ ARTICLE ➔</a>' +
-                        '</div>';
+                html += `<div class="news-card">
+                            <strong>${item.title}</strong>
+                            <p>${item.desc}</p>
+                            <a href="${item.link}" target="_blank">READ ARTICLE ➔</a>
+                        </div>`;
             });
             container.innerHTML = html;
         }
 
+        // --- Voice Command Processing ---
         function startVoice() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
