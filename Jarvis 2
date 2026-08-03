@@ -108,8 +108,8 @@
 
         .hud-panel {
             position: absolute;
-            width: 300px;
-            max-width: 88vw;
+            width: 310px;
+            max-width: 90vw;
             max-height: 65vh;
             overflow-y: auto;
             background: rgba(0, 240, 255, 0.12);
@@ -122,13 +122,13 @@
             backdrop-filter: blur(8px);
             z-index: 30;
             touch-action: none;
-            transition: width 0.2s ease, height 0.2s ease;
+            transition: width 0.25s ease, height 0.25s ease;
         }
 
         .hud-panel.expanded {
-            width: 340px;
+            width: 360px;
             max-width: 95vw;
-            max-height: 75vh;
+            max-height: 80vh;
             border-color: #ffffff;
             box-shadow: 0 0 25px rgba(0, 240, 255, 0.7);
         }
@@ -197,6 +197,25 @@
             padding: 8px;
             margin-bottom: 8px;
             border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .info-card:hover {
+            background: rgba(0, 240, 255, 0.2);
+        }
+
+        .info-card.card-enlarged {
+            background: rgba(0, 240, 255, 0.25);
+            border-left: 5px solid #ffffff;
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+            padding: 12px;
+        }
+
+        .info-card.card-enlarged p {
+            font-size: 0.85rem;
+            color: #ffffff;
+            line-height: 1.4;
         }
 
         .info-card strong {
@@ -324,7 +343,7 @@
         <div class="terminal-area">
             <div id="log" class="log-box">SYSTEM: Online and awaiting directives...</div>
             <div class="controls">
-                <input type="text" id="userInput" placeholder="Ask JARVIS (e.g. 'NBA', 'White House', 'move left')..." onkeydown="if(event.key==='Enter') processInput()">
+                <input type="text" id="userInput" placeholder="Ask JARVIS (e.g. 'Panthers news', 'Enlarge Seahawks')..." onkeydown="if(event.key==='Enter') processInput()">
                 <button onclick="processInput()">SEND</button>
                 <button onclick="startVoice()">MIC</button>
             </div>
@@ -335,7 +354,7 @@
         let topZIndex = 100;
         let activePanel = null;
 
-        // --- Unified Pointer Events Engine (Smooth Mouse + Mobile Drag) ---
+        // --- Drag Engine ---
         function makeDraggable(element) {
             const handle = element.querySelector('.drag-header') || element;
             let startX = 0, startY = 0, initialLeft = 0, initialTop = 0, isDragging = false;
@@ -379,7 +398,7 @@
             handle.addEventListener('pointercancel', stopDrag);
         }
 
-        // --- Clock & Loader ---
+        // --- System Clock & Speech ---
         setTimeout(() => {
             const loader = document.getElementById('loader');
             if (loader) {
@@ -408,12 +427,12 @@
             } catch (e) {}
         }
 
-        // --- Panel Positioning ---
+        // --- Window Layout Control ---
         function applyPanelPosition(panel, pos) {
             const workspace = document.getElementById('workspace');
             const wWidth = workspace.clientWidth;
             const wHeight = workspace.clientHeight;
-            const pWidth = Math.min(300, wWidth * 0.88);
+            const pWidth = Math.min(310, wWidth * 0.88);
             const pHeight = 220;
 
             switch (pos) {
@@ -473,7 +492,35 @@
             return panel;
         }
 
-        // --- Command & Query Logic ---
+        // --- Card-Level Enlargement Logic ---
+        function enlargeTargetCard(targetText) {
+            if (!activePanel) {
+                const panels = document.querySelectorAll('.hud-panel');
+                if (panels.length > 0) activePanel = panels[panels.length - 1];
+            }
+
+            if (!activePanel) return false;
+
+            const cards = activePanel.querySelectorAll('.info-card');
+            let found = false;
+
+            cards.forEach(card => {
+                const cardContent = card.innerText.toLowerCase();
+                if (targetText === "" || cardContent.includes(targetText.toLowerCase())) {
+                    card.classList.toggle('card-enlarged');
+                    found = true;
+                }
+            });
+
+            if (found) {
+                activePanel.classList.add('expanded');
+                speak("Enlarged requested target data.");
+                return true;
+            }
+            return false;
+        }
+
+        // --- NLP Input Engine ---
         async function processInput() {
             const inputField = document.getElementById('userInput');
             if (!inputField) return;
@@ -483,23 +530,20 @@
             inputField.value = '';
             const textLower = rawText.toLowerCase();
 
-            // Clear directive
+            // 1. Clear Directives
             if (textLower.includes('clear') || textLower.includes('close')) {
                 document.querySelectorAll('.hud-panel').forEach(p => p.remove());
-                speak("Cleared all active HUD modules.");
+                speak("Cleared active HUD windows.");
                 return;
             }
 
-            // Enlarge directive
+            // 2. Card Enlargement Commands ("Enlarge Seahawks", "Make Falcons bigger", "Enlarge info on panthers")
             if (textLower.includes('enlarge') || textLower.includes('expand') || textLower.includes('make bigger')) {
-                if (activePanel) {
-                    activePanel.classList.add('expanded');
-                    speak("Enlarging telemetry module, Sir.");
-                    return;
-                }
+                let target = textLower.replace(/enlarge|expand|make bigger|the information on|information on|info on|the info on|the|about/gi, '').trim();
+                if (enlargeTargetCard(target)) return;
             }
 
-            // Position directives
+            // 3. Positional Commands
             const isMoveOnly = textLower.includes('move') || textLower.includes('put it') || textLower.includes('shift');
             let detectedPos = null;
             if (textLower.includes('left')) detectedPos = 'left';
@@ -514,52 +558,49 @@
                 return;
             }
 
-            // Clean Topic Cleaners
+            // 4. Topic Extraction
             let targetPos = detectedPos || 'right';
             let query = rawText.replace(/hi jarvis|jarvis|move this to the|move to the|put this on the|move this|on the left|on left|on the right|on right|on top|at top|on bottom|at bottom|in the middle|in center|to the left|to the right|show me|tell me about|what is|who is|search for|add the latest|add latest|get latest|news about|news on/gi, '').trim();
 
-            if (!query) query = "Latest News";
+            if (!query) query = "Latest Intelligence";
 
-            speak("Fetching live telemetry for " + query + ".");
+            speak("Analyzing query parameters for " + query + ".");
             await fetchUniversalTelemetry(query, targetPos);
         }
 
-        // --- Universal Multi-API Fetch Engine ---
+        // --- Dynamic Search & Data Fetching Engine ---
         async function fetchUniversalTelemetry(query, pos) {
-            const panel = createPanel(`<h3>TELEMETRY: ${query.toUpperCase()}</h3><p>Connecting to external stream...</p>`, pos);
+            const panel = createPanel(`<h3>TELEMETRY: ${query.toUpperCase()}</h3><p>Syncing neural data node...</p>`, pos);
             const qLower = query.toLowerCase();
 
-            // 1. NBA / Basketball Feeds
-            if (qLower.includes('nba') || qLower.includes('basketball')) {
+            // Sports League & Team Smart Matcher
+            const isBasketball = qLower.includes('nba') || qLower.includes('basketball') || qLower.includes('lakers') || qLower.includes('celtics') || qLower.includes('warriors') || qLower.includes('bulls');
+            const isFootball = qLower.includes('nfl') || qLower.includes('football') || qLower.includes('falcons') || qLower.includes('seahawks') || qLower.includes('panthers') || qLower.includes('chiefs') || qLower.includes('eagles') || qLower.includes('cowboys');
+
+            if (isBasketball || isFootball) {
+                const sportPath = isBasketball ? 'basketball/nba' : 'football/nfl';
                 try {
-                    const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news');
+                    const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${sportPath}/news`);
                     if (res.ok) {
                         const data = await res.json();
                         if (data.articles && data.articles.length > 0) {
-                            renderArticles(panel, "NBA TELEMETRY", data.articles);
-                            speak("NBA telemetry feed loaded, Sir.");
+                            // Filter specifically by team if requested, or give top league news
+                            let filteredArticles = data.articles.filter(art => {
+                                const text = (art.headline + ' ' + (art.description || '')).toLowerCase();
+                                return text.includes(qLower.replace('news', '').trim());
+                            });
+
+                            if (filteredArticles.length === 0) filteredArticles = data.articles;
+
+                            renderNewsCards(panel, `${query.toUpperCase()} TELEMETRY`, filteredArticles);
+                            speak(`Sports telemetry acquired for ${query}.`);
                             return;
                         }
                     }
                 } catch (e) {}
             }
 
-            // 2. NFL / Football Feeds
-            if (qLower.includes('nfl') || qLower.includes('football') || qLower.includes('falcons')) {
-                try {
-                    const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/news');
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data.articles && data.articles.length > 0) {
-                            renderArticles(panel, "NFL TELEMETRY", data.articles);
-                            speak("NFL telemetry feed loaded, Sir.");
-                            return;
-                        }
-                    }
-                } catch (e) {}
-            }
-
-            // 3. Wikipedia Open API Engine (White House, Places, Concepts)
+            // Universal Knowledge (Wikipedia Deep Extract)
             try {
                 const searchRes = await fetch('https://en.wikipedia.org/w/api.php?action=opensearch&search=' + encodeURIComponent(query) + '&limit=1&namespace=0&format=json&origin=*');
                 if (searchRes.ok) {
@@ -579,7 +620,8 @@
                                         </div>
                                     </div>
                                     <h3>${summaryData.title.toUpperCase()}</h3>
-                                    <div class="info-card">
+                                    <div class="info-card card-enlarged">
+                                        <strong>PRIMARY BRIEFING</strong>
                                         <p>${summaryData.extract}</p>
                                     </div>
                                 `;
@@ -591,7 +633,7 @@
                 }
             } catch (e) {}
 
-            // Fallback Readout
+            // Fallback Telemetry Card
             panel.innerHTML = `
                 <div class="drag-header">
                     <span class="drag-handle">::: DRAG :::</span>
@@ -602,23 +644,24 @@
                 </div>
                 <h3>TELEMETRY: ${query.toUpperCase()}</h3>
                 <div class="info-card">
-                    <strong>FEED INITIALIZED</strong>
-                    <p>Live parameters calculated for '${query}'.</p>
+                    <strong>DATA NODE ACTIVE</strong>
+                    <p>Live search stream established for '${query}'. Ask JARVIS to enlarge specific parameters.</p>
                 </div>
             `;
-            speak("Telemetry readout generated.");
+            speak("Telemetry readout initialized.");
         }
 
-        function renderArticles(panel, title, articles) {
+        function renderNewsCards(panel, title, articles) {
             let content = `<h3>${title}</h3>`;
-            articles.slice(0, 4).forEach(item => {
+            articles.slice(0, 5).forEach(item => {
                 content += `
-                    <div class="info-card">
+                    <div class="info-card" onclick="this.classList.toggle('card-enlarged')">
                         <strong>${item.headline}</strong>
-                        <p>${item.description || 'Live summary update.'}</p>
+                        <p>${item.description || 'Tap card or tell JARVIS to enlarge this topic.'}</p>
                     </div>
                 `;
             });
+
             panel.innerHTML = `
                 <div class="drag-header">
                     <span class="drag-handle">::: DRAG :::</span>
