@@ -1,30 +1,9 @@
-Looking at your screenshots side by side, I see exactly what's happening:
-
-1. **ESPN API Missing:** In your earlier version (first screenshot), it was actually fetching and displaying live news cards. In the streamlined script, the ESPN logic got accidentally stripped down to standard text!
-2. **Text Parsing Bug:** When you type or say *"give me latest news on nfl"*, JARVIS takes that entire sentence literally (`"give me latest news on nfl"`) instead of trimming out filler words and searching specifically for **"nfl"**.
-3. **Touch Dragging on Mobile:** On smartphones, mobile browsers (especially Safari/Chrome on iOS) try to scroll the web page when you touch and drag, which blocks the custom JavaScript drag handlers.
-
----
-
-### Key Fixes Applied Below
-
-* **Restored ESPN API Integration:** The custom NFL/Sports news fetcher is back. When you ask for sports or NFL, it hits ESPN's live news feed and renders the actual headlines and links directly inside the panel card.
-* **Smart Natural Language Parsing:** Added keyword extractions so phrases like *"give me latest news on..."*, *"can you show me..."*, or *"tell me about..."* are stripped out automatically, leaving just the core search topic.
-* **Fixed Mobile Touch Events:** Added full `e.preventDefault()` touch event handling specifically mapped for touchscreens so you can drag panels seamlessly anywhere on mobile screens without sticky movement.
-
----
-
-### Complete Updated Code
-
-Replace your entire file on Netlify with this code:
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>J.A.R.V.I.S. Core Interface v4.0</title>
+    <title>J.A.R.V.I.S. Core Interface v5.0</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap');
 
@@ -67,12 +46,12 @@ Replace your entire file on Netlify with this code:
             justify-content: center;
             align-items: center;
             z-index: 999;
-            transition: opacity 0.8s ease;
+            transition: opacity 0.5s ease;
         }
 
         .loader-ring {
-            width: 90px;
-            height: 90px;
+            width: 80px;
+            height: 80px;
             border: 3px solid transparent;
             border-top: 3px solid #00f0ff;
             border-radius: 50%;
@@ -81,12 +60,11 @@ Replace your entire file on Netlify with this code:
         }
 
         .loader-text {
-            margin-top: 20px;
+            margin-top: 15px;
             font-family: 'Orbitron', sans-serif;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             letter-spacing: 2px;
             text-shadow: 0 0 8px #00f0ff;
-            animation: pulse 1.5s infinite;
         }
 
         #hud-container {
@@ -94,7 +72,6 @@ Replace your entire file on Netlify with this code:
             width: 100vw;
             height: 100vh;
             border: 1px solid rgba(0, 240, 255, 0.3);
-            box-shadow: inset 0 0 20px rgba(0, 240, 255, 0.15);
             background: rgba(4, 18, 38, 0.6);
             backdrop-filter: blur(5px);
             display: flex;
@@ -131,16 +108,16 @@ Replace your entire file on Netlify with this code:
 
         .hud-panel {
             position: absolute;
-            width: 310px;
-            max-width: 85vw;
-            background: rgba(0, 240, 255, 0.15);
+            width: 280px;
+            max-width: 80vw;
+            background: rgba(0, 240, 255, 0.12);
             border: 1px solid #00f0ff;
-            padding: 12px;
+            padding: 10px;
             border-radius: 6px;
-            box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
-            font-size: 0.85rem;
-            line-height: 1.4;
-            backdrop-filter: blur(10px);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
+            font-size: 0.8rem;
+            line-height: 1.3;
+            backdrop-filter: blur(8px);
             z-index: 30;
             touch-action: none;
         }
@@ -151,8 +128,8 @@ Replace your entire file on Netlify with this code:
             align-items: center;
             background: rgba(0, 240, 255, 0.3);
             color: #ffffff;
-            padding: 8px 10px;
-            margin: -12px -12px 8px -12px;
+            padding: 6px 8px;
+            margin: -10px -10px 8px -10px;
             border-bottom: 1px solid #00f0ff;
             border-radius: 5px 5px 0 0;
             cursor: move;
@@ -161,18 +138,18 @@ Replace your entire file on Netlify with this code:
 
         .drag-handle {
             font-family: 'Orbitron', sans-serif;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             letter-spacing: 1px;
             flex-grow: 1;
         }
 
         .close-btn {
-            background: rgba(255, 0, 85, 0.5);
+            background: rgba(255, 0, 85, 0.6);
             border: 1px solid #ff0055;
             color: #fff;
             border-radius: 3px;
-            padding: 2px 8px;
-            font-size: 0.75rem;
+            padding: 1px 6px;
+            font-size: 0.7rem;
             cursor: pointer;
             font-family: 'Orbitron', sans-serif;
         }
@@ -180,40 +157,30 @@ Replace your entire file on Netlify with this code:
         .hud-panel h3 {
             font-family: 'Orbitron', sans-serif;
             border-bottom: 1px solid rgba(0, 240, 255, 0.4);
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             padding-bottom: 4px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #ffffff;
             text-shadow: 0 0 8px #00f0ff;
             text-transform: uppercase;
         }
 
-        .news-card {
+        .news-item {
             background: rgba(0, 240, 255, 0.08);
-            border-left: 3px solid #00f0ff;
-            padding: 8px;
-            margin-bottom: 8px;
-            border-radius: 0 4px 4px 0;
-        }
-
-        .news-card strong {
-            color: #ffffff;
-            display: block;
-            margin-bottom: 4px;
-            font-size: 0.85rem;
-        }
-
-        .news-card p {
-            color: #b0efff;
-            font-size: 0.78rem;
+            border-left: 2px solid #00f0ff;
+            padding: 6px;
             margin-bottom: 6px;
         }
 
-        .news-card a {
-            color: #00f0ff;
-            text-decoration: underline;
-            font-size: 0.75rem;
-            font-weight: bold;
+        .news-item strong {
+            color: #fff;
+            display: block;
+            font-size: 0.8rem;
+        }
+
+        .news-item p {
+            color: #b0efff;
+            font-size: 0.72rem;
         }
 
         .arc-container {
@@ -226,23 +193,23 @@ Replace your entire file on Netlify with this code:
         }
 
         .arc-reactor {
-            width: 120px;
-            height: 120px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             border: 2px dashed #00f0ff;
             display: flex;
             justify-content: center;
             align-items: center;
             animation: spin 20s linear infinite;
-            box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
         }
 
         .arc-core {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: radial-gradient(circle, #ffffff 0%, #00f0ff 60%, rgba(0,240,255,0) 100%);
-            box-shadow: 0 0 30px #00f0ff;
+            box-shadow: 0 0 25px #00f0ff;
             animation: pulse 2s ease-in-out infinite;
         }
 
@@ -250,7 +217,7 @@ Replace your entire file on Netlify with this code:
             display: flex;
             flex-direction: column;
             gap: 6px;
-            height: 95px;
+            height: 90px;
             z-index: 20;
         }
 
@@ -258,9 +225,9 @@ Replace your entire file on Netlify with this code:
             flex: 1;
             overflow-y: auto;
             color: #7df9ff;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             text-shadow: 0 0 5px #00f0ff;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.5);
             padding: 6px;
             border-radius: 4px;
             border: 1px solid rgba(0, 240, 255, 0.2);
@@ -268,7 +235,7 @@ Replace your entire file on Netlify with this code:
 
         .controls {
             display: flex;
-            gap: 8px;
+            gap: 6px;
         }
 
         input[type="text"] {
@@ -276,9 +243,9 @@ Replace your entire file on Netlify with this code:
             background: rgba(0, 240, 255, 0.1);
             border: 1px solid #00f0ff;
             color: #00f0ff;
-            padding: 10px;
+            padding: 8px;
             font-family: 'Share Tech Mono', monospace;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             outline: none;
             border-radius: 4px;
             -webkit-user-select: text;
@@ -289,12 +256,11 @@ Replace your entire file on Netlify with this code:
             background: rgba(0, 240, 255, 0.25);
             border: 1px solid #00f0ff;
             color: #00f0ff;
-            padding: 10px 14px;
+            padding: 8px 12px;
             cursor: pointer;
             font-family: 'Orbitron', sans-serif;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             border-radius: 4px;
-            transition: all 0.2s;
         }
 
         button:active {
@@ -310,7 +276,7 @@ Replace your entire file on Netlify with this code:
 
     <div id="loader">
         <div class="loader-ring"></div>
-        <div class="loader-text">INITIALIZING STARK HUD v4.0...</div>
+        <div class="loader-text">INITIALIZING STARK HUD v5.0...</div>
     </div>
 
     <div id="hud-container">
@@ -325,23 +291,12 @@ Replace your entire file on Netlify with this code:
                     <div class="arc-core"></div>
                 </div>
             </div>
-
-            <div id="panel-status" class="hud-panel" style="top: 15px; left: 15px;">
-                <div class="drag-header">
-                    <span class="drag-handle">::: DRAG :::</span>
-                    <button class="close-btn" onclick="this.closest('.hud-panel').remove()">X</button>
-                </div>
-                <h3>SYSTEM STATUS</h3>
-                <p>• Core Engine: Active</p>
-                <p>• Neural Link: Operational</p>
-                <p>• Satellite Uplink: Connected</p>
-            </div>
         </div>
 
         <div class="terminal-area">
             <div id="log" class="log-box">SYSTEM: Online and awaiting directives...</div>
             <div class="controls">
-                <input type="text" id="userInput" placeholder="Ask JARVIS (e.g. 'nfl news on left', 'who is Einstein')..." onkeydown="if(event.key==='Enter') processInput()">
+                <input type="text" id="userInput" placeholder="Type or tap MIC (e.g. 'nfl news', 'einstein')..." onkeydown="if(event.key==='Enter') processInput()">
                 <button onclick="processInput()">SEND</button>
                 <button onclick="startVoice()">MIC</button>
             </div>
@@ -349,77 +304,64 @@ Replace your entire file on Netlify with this code:
     </div>
 
     <script>
-        let availableVoices = [];
         let topZIndex = 100;
 
-        // --- Touch & Mouse Drag Handler ---
+        // --- Drag Engine for Touch and Mouse ---
         function makeDraggable(element) {
             const handle = element.querySelector('.drag-header') || element;
-            let currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0;
+            let startX = 0, startY = 0, currentLeft = 0, currentTop = 0;
 
-            function dragStart(e) {
+            function onStart(e) {
+                if (e.target.classList.contains('close-btn')) return;
+
                 topZIndex++;
                 element.style.zIndex = topZIndex;
 
-                if (e.type === "touchstart") {
-                    initialX = e.touches[0].clientX - xOffset;
-                    initialY = e.touches[0].clientY - yOffset;
-                } else {
-                    initialX = e.clientX - xOffset;
-                    initialY = e.clientY - yOffset;
-                }
+                const touch = e.touches ? e.touches[0] : e;
+                startX = touch.clientX;
+                startY = touch.clientY;
 
-                if (e.target.classList.contains('close-btn')) return;
+                currentLeft = element.offsetLeft;
+                currentTop = element.offsetTop;
 
-                window.addEventListener('mousemove', drag);
-                window.addEventListener('mouseup', dragEnd);
-                window.addEventListener('touchmove', drag, { passive: false });
-                window.addEventListener('touchend', dragEnd);
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('mouseup', onEnd);
+                window.addEventListener('touchmove', onMove, { passive: false });
+                window.addEventListener('touchend', onEnd);
             }
 
-            function drag(e) {
-                e.preventDefault();
+            function onMove(e) {
+                if (e.cancelable) e.preventDefault();
+                const touch = e.touches ? e.touches[0] : e;
 
-                if (e.type === "touchmove") {
-                    currentX = e.touches[0].clientX - initialX;
-                    currentY = e.touches[0].clientY - initialY;
-                } else {
-                    currentX = e.clientX - initialX;
-                    currentY = e.clientY - initialY;
-                }
+                const deltaX = touch.clientX - startX;
+                const deltaY = touch.clientY - startY;
 
-                xOffset = currentX;
-                yOffset = currentY;
-
-                element.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+                element.style.left = (currentLeft + deltaX) + 'px';
+                element.style.top = (currentTop + deltaY) + 'px';
+                element.style.right = 'auto';
             }
 
-            function dragEnd() {
-                initialX = currentX;
-                initialY = currentY;
-                window.removeEventListener('mousemove', drag);
-                window.removeEventListener('mouseup', dragEnd);
-                window.removeEventListener('touchmove', drag);
-                window.removeEventListener('touchend', dragEnd);
+            function onEnd() {
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onEnd);
+                window.removeEventListener('touchmove', onMove);
+                window.removeEventListener('touchend', onEnd);
             }
 
-            handle.addEventListener('mousedown', dragStart);
-            handle.addEventListener('touchstart', dragStart, { passive: false });
+            handle.addEventListener('mousedown', onStart);
+            handle.addEventListener('touchstart', onStart, { passive: false });
         }
 
-        document.querySelectorAll('.hud-panel').forEach(makeDraggable);
-
-        // --- Clock & Startup ---
+        // --- Clock & Loader ---
         setTimeout(() => {
             const loader = document.getElementById('loader');
             if (loader) {
                 loader.style.opacity = '0';
-                setTimeout(() => {
-                    loader.style.display = 'none';
-                    speak("System online. At your service, Sir.");
-                }, 500);
+                setTimeout(() => loader.style.display = 'none', 500);
             }
-        }, 1800);
+            speak("System online, Sir.");
+        }, 1200);
 
         setInterval(() => {
             const clock = document.getElementById('clock');
@@ -427,99 +369,21 @@ Replace your entire file on Netlify with this code:
         }, 1000);
 
         function speak(text) {
+            const log = document.getElementById('log');
+            if (log) log.innerText = "JARVIS: " + text;
+
             try {
                 if (!('speechSynthesis' in window)) return;
                 window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.pitch = 0.95;
                 utterance.rate = 1.0;
-
-                const voices = availableVoices.length ? availableVoices : window.speechSynthesis.getVoices();
-                const preferredVoice = voices.find(v => 
-                    v.name.includes('Google UK English Male') || 
-                    v.name.includes('Natural') || 
-                    (v.lang.includes('en-GB') && v.name.includes('Male')) ||
-                    v.name.includes('Daniel')
-                ) || voices.find(v => v.lang.includes('en-GB')) || voices[0];
-
-                if (preferredVoice) utterance.voice = preferredVoice;
                 window.speechSynthesis.speak(utterance);
             } catch (e) {}
-
-            const log = document.getElementById('log');
-            if (log) log.innerText = "JARVIS: " + text;
         }
 
-        // --- Screen Positioning Engine ---
-        function setPanelPosition(panel, position) {
-            const workspace = document.getElementById('workspace');
-            const wWidth = workspace.clientWidth;
-            const wHeight = workspace.clientHeight;
-            const pWidth = Math.min(310, wWidth * 0.85);
-            const pHeight = 220;
-
-            switch (position) {
-                case 'left':
-                    panel.style.left = '10px';
-                    panel.style.top = `${Math.max(10, (wHeight - pHeight) / 2)}px`;
-                    break;
-                case 'right':
-                    panel.style.left = `${Math.max(10, wWidth - pWidth - 15)}px`;
-                    panel.style.top = `${Math.max(10, (wHeight - pHeight) / 2)}px`;
-                    break;
-                case 'top':
-                    panel.style.left = `${Math.max(10, (wWidth - pWidth) / 2)}px`;
-                    panel.style.top = '10px';
-                    break;
-                case 'bottom':
-                    panel.style.left = `${Math.max(10, (wWidth - pWidth) / 2)}px`;
-                    panel.style.top = `${Math.max(10, wHeight - pHeight - 20)}px`;
-                    break;
-                case 'middle':
-                case 'center':
-                default:
-                    panel.style.left = `${Math.max(10, (wWidth - pWidth) / 2)}px`;
-                    panel.style.top = `${Math.max(10, (wHeight - pHeight) / 2)}px`;
-                    break;
-            }
-        }
-
-        // --- Smart Input Processor ---
-        async function processInput() {
-            const inputField = document.getElementById('userInput');
-            if (!inputField) return;
-            const rawQuery = inputField.value.trim();
-            if (!rawQuery) return;
-
-            inputField.value = '';
-            const qLower = rawQuery.toLowerCase();
-
-            if (qLower.includes('clear') || qLower.includes('close')) {
-                document.querySelectorAll('.hud-panel').forEach(p => p.remove());
-                speak("Clearing active HUD windows.");
-                return;
-            }
-
-            // Detect target side
-            let position = 'right';
-            if (qLower.includes('left')) position = 'left';
-            else if (qLower.includes('right')) position = 'right';
-            else if (qLower.includes('top')) position = 'top';
-            else if (qLower.includes('bottom')) position = 'bottom';
-            else if (qLower.includes('middle') || qLower.includes('center')) position = 'middle';
-
-            // Clean filler phrases to isolate search keyword
-            let cleanTerm = rawQuery.replace(/on the left|on left|to the left|on the right|on right|to the right|on top|at top|on bottom|at bottom|in middle|in center/gi, '')
-                                 .replace(/give me|latest news on|show me|open|search|put|move|what is|tell me about|news for|news/gi, '')
-                                 .trim();
-
-            if (!cleanTerm) cleanTerm = "nfl";
-
-            speak(`Accessing telemetry for ${cleanTerm}, Sir.`);
-            await fetchAndRenderData(cleanTerm, position);
-        }
-
-        function createHudPanel(titleHTML, position) {
+        // --- Panel Creation & Layout ---
+        function createPanel(titleHTML, side = 'right') {
             const workspace = document.getElementById('workspace');
             const panel = document.createElement('div');
             panel.className = 'hud-panel';
@@ -536,49 +400,83 @@ Replace your entire file on Netlify with this code:
 
             workspace.appendChild(panel);
             makeDraggable(panel);
-            setPanelPosition(panel, position);
+
+            // Side positioning
+            const workspaceWidth = workspace.clientWidth;
+            if (side === 'left') {
+                panel.style.left = '10px';
+            } else {
+                panel.style.left = Math.max(10, workspaceWidth - 290) + 'px';
+            }
+            panel.style.top = '20px';
+
             return panel;
         }
 
-        // --- Data Fetcher & Knowledge Engine ---
-        async function fetchAndRenderData(term, position) {
-            const newPanel = createHudPanel(`<h3>SEARCHING: ${term.toUpperCase()}</h3><p>Connecting to satellite feeds...</p>`, position);
-            const qLower = term.toLowerCase();
+        // --- Command Processor ---
+        async function processInput() {
+            const inputField = document.getElementById('userInput');
+            if (!inputField) return;
+            const rawText = inputField.value.trim();
+            if (!rawText) return;
 
-            // 1. ESPN Live Sports Feed Integration
-            if (qLower.includes('nfl') || qLower.includes('football') || qLower.includes('sports') || qLower.includes('espn')) {
+            inputField.value = '';
+            const textLower = rawText.toLowerCase();
+
+            if (textLower.includes('clear') || textLower.includes('close')) {
+                document.querySelectorAll('.hud-panel').forEach(p => p.remove());
+                speak("Cleared HUD panels.");
+                return;
+            }
+
+            let side = textLower.includes('left') ? 'left' : 'right';
+
+            // Clean query text
+            let query = rawText.replace(/on the left|on left|on the right|on right|show me|give me|latest news on|news|search/gi, '').trim();
+            if (!query) query = "NFL";
+
+            speak("Accessing telemetry for " + query + ".");
+            await fetchTelemetryData(query, side);
+        }
+
+        // --- API Data Fetching ---
+        async function fetchTelemetryData(query, side) {
+            const panel = createPanel(`<h3>SEARCHING: ${query.toUpperCase()}</h3><p>Connecting to feeds...</p>`, side);
+            const qLower = query.toLowerCase();
+
+            // 1. ESPN NFL Integration
+            if (qLower.includes('nfl') || qLower.includes('football') || qLower.includes('sports')) {
                 try {
-                    const espnRes = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/news');
-                    if (espnRes.ok) {
-                        const espnData = await espnRes.json();
-                        if (espnData.articles && espnData.articles.length > 0) {
-                            let articlesHTML = `<h3>NFL TELEMETRY</h3>`;
-                            espnData.articles.slice(0, 3).forEach(item => {
-                                articlesHTML += `
-                                    <div class="news-card">
+                    const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/news');
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.articles && data.articles.length > 0) {
+                            let content = `<h3>NFL NEWS FEED</h3>`;
+                            data.articles.slice(0, 3).forEach(item => {
+                                content += `
+                                    <div class="news-item">
                                         <strong>${item.headline}</strong>
-                                        <p>${item.description || 'Live updates from ESPN feed.'}</p>
-                                        <a href="${(item.links && item.links.web) ? item.links.web.href : '#'}" target="_blank">READ ARTICLE ➔</a>
+                                        <p>${item.description || 'Live ESPN headline.'}</p>
                                     </div>
                                 `;
                             });
-                            newPanel.innerHTML = `
+                            panel.innerHTML = `
                                 <div class="drag-header">
                                     <span class="drag-handle">::: DRAG :::</span>
                                     <button class="close-btn" onclick="this.closest('.hud-panel').remove()">X</button>
                                 </div>
-                                ${articlesHTML}
+                                ${content}
                             `;
-                            speak("NFL telemetry updated, Sir.");
+                            speak("NFL news telemetry updated.");
                             return;
                         }
                     }
                 } catch (e) {}
             }
 
-            // 2. Wikipedia General Query API
+            // 2. Wikipedia Integration
             try {
-                const searchRes = await fetch('https://en.wikipedia.org/w/api.php?action=opensearch&search=' + encodeURIComponent(term) + '&limit=1&namespace=0&format=json&origin=*');
+                const searchRes = await fetch('https://en.wikipedia.org/w/api.php?action=opensearch&search=' + encodeURIComponent(query) + '&limit=1&namespace=0&format=json&origin=*');
                 if (searchRes.ok) {
                     const searchData = await searchRes.json();
                     if (searchData && searchData[1] && searchData[1].length > 0) {
@@ -587,7 +485,7 @@ Replace your entire file on Netlify with this code:
                         if (summaryRes.ok) {
                             const wikiData = await summaryRes.json();
                             if (wikiData.extract) {
-                                newPanel.innerHTML = `
+                                panel.innerHTML = `
                                     <div class="drag-header">
                                         <span class="drag-handle">::: DRAG :::</span>
                                         <button class="close-btn" onclick="this.closest('.hud-panel').remove()">X</button>
@@ -595,7 +493,7 @@ Replace your entire file on Netlify with this code:
                                     <h3>${wikiData.title.toUpperCase()}</h3>
                                     <p>${wikiData.extract}</p>
                                 `;
-                                speak(wikiData.extract.substring(0, 140) + '...');
+                                speak(wikiData.extract.substring(0, 100) + '...');
                                 return;
                             }
                         }
@@ -603,24 +501,24 @@ Replace your entire file on Netlify with this code:
                 }
             } catch (e) {}
 
-            // 3. General Fallback
-            newPanel.innerHTML = `
+            // Fallback Panel
+            panel.innerHTML = `
                 <div class="drag-header">
                     <span class="drag-handle">::: DRAG :::</span>
                     <button class="close-btn" onclick="this.closest('.hud-panel').remove()">X</button>
                 </div>
-                <h3>TELEMETRY: ${term.toUpperCase()}</h3>
-                <p>• Status: Active Data Stream</p>
-                <p>• Displaying telemetry readout for ${term}.</p>
+                <h3>TELEMETRY: ${query.toUpperCase()}</h3>
+                <p>• Data stream initialized.</p>
+                <p>• Ready for query: ${query}</p>
             `;
-            speak("Telemetry updated for " + term + ", Sir.");
+            speak("Telemetry readout generated.");
         }
 
-        // --- Voice Processing ---
+        // --- Voice Mic Handler ---
         function startVoice() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
-                alert("Speech recognition is not supported in this browser.");
+                alert("Speech recognition is not supported on this browser.");
                 return;
             }
 
@@ -638,11 +536,9 @@ Replace your entire file on Netlify with this code:
             };
 
             recognition.onerror = () => {
-                speak("I didn't catch that, Sir.");
+                speak("Voice recognition error.");
             };
         }
     </script>
 </body>
 </html>
-
-```
