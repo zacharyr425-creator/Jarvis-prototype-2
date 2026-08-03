@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>J.A.R.V.I.S. Interactive HUD</title>
+    <title>J.A.R.V.I.S. Core Interface</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap');
 
@@ -109,7 +109,7 @@
         .hud-panel {
             position: absolute;
             width: 300px;
-            max-width: 85vw;
+            max-width: 88vw;
             max-height: 65vh;
             overflow-y: auto;
             background: rgba(0, 240, 255, 0.12);
@@ -122,30 +122,34 @@
             backdrop-filter: blur(8px);
             z-index: 30;
             touch-action: none;
-            transition: width 0.3s ease, height 0.3s ease;
+            transition: width 0.2s ease, height 0.2s ease;
         }
 
         .hud-panel.expanded {
             width: 340px;
-            max-width: 92vw;
+            max-width: 95vw;
             max-height: 75vh;
             border-color: #ffffff;
-            box-shadow: 0 0 25px rgba(0, 240, 255, 0.6);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.7);
         }
 
         .drag-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(0, 240, 255, 0.3);
+            background: rgba(0, 240, 255, 0.35);
             color: #ffffff;
-            padding: 6px 8px;
+            padding: 8px 10px;
             margin: -10px -10px 8px -10px;
             border-bottom: 1px solid #00f0ff;
             border-radius: 5px 5px 0 0;
-            cursor: move;
+            cursor: grab;
             touch-action: none;
-            sticky: top;
+        }
+
+        .drag-header:active {
+            cursor: grabbing;
+            background: rgba(0, 240, 255, 0.5);
         }
 
         .drag-handle {
@@ -165,7 +169,7 @@
             border: 1px solid #00f0ff;
             color: #fff;
             border-radius: 3px;
-            padding: 1px 6px;
+            padding: 2px 6px;
             font-size: 0.65rem;
             cursor: pointer;
             font-family: 'Orbitron', sans-serif;
@@ -193,12 +197,6 @@
             padding: 8px;
             margin-bottom: 8px;
             border-radius: 0 4px 4px 0;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .info-card:hover, .info-card:active {
-            background: rgba(0, 240, 255, 0.2);
         }
 
         .info-card strong {
@@ -326,7 +324,7 @@
         <div class="terminal-area">
             <div id="log" class="log-box">SYSTEM: Online and awaiting directives...</div>
             <div class="controls">
-                <input type="text" id="userInput" placeholder="Ask JARVIS (e.g., 'NBA news', 'White House', 'enlarge')..." onkeydown="if(event.key==='Enter') processInput()">
+                <input type="text" id="userInput" placeholder="Ask JARVIS (e.g. 'NBA', 'White House', 'move left')..." onkeydown="if(event.key==='Enter') processInput()">
                 <button onclick="processInput()">SEND</button>
                 <button onclick="startVoice()">MIC</button>
             </div>
@@ -337,62 +335,58 @@
         let topZIndex = 100;
         let activePanel = null;
 
-        // --- Touch & Mouse Drag Engine ---
+        // --- Unified Pointer Events Engine (Smooth Mouse + Mobile Drag) ---
         function makeDraggable(element) {
             const handle = element.querySelector('.drag-header') || element;
-            let startX = 0, startY = 0, initialX = 0, initialY = 0;
+            let startX = 0, startY = 0, initialLeft = 0, initialTop = 0, isDragging = false;
 
-            function onStart(e) {
+            handle.addEventListener('pointerdown', (e) => {
                 if (e.target.classList.contains('action-btn') || e.target.classList.contains('close-btn')) return;
+
+                isDragging = true;
+                handle.setPointerCapture(e.pointerId);
 
                 topZIndex++;
                 element.style.zIndex = topZIndex;
                 activePanel = element;
 
-                const touch = e.touches ? e.touches[0] : e;
-                startX = touch.clientX;
-                startY = touch.clientY;
+                startX = e.clientX;
+                startY = e.clientY;
+                initialLeft = element.offsetLeft;
+                initialTop = element.offsetTop;
+            });
 
-                initialX = element.offsetLeft;
-                initialY = element.offsetTop;
+            handle.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
 
-                window.addEventListener('mousemove', onMove);
-                window.addEventListener('mouseup', onEnd);
-                window.addEventListener('touchmove', onMove, { passive: false });
-                window.addEventListener('touchend', onEnd);
-            }
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
 
-            function onMove(e) {
-                if (e.cancelable) e.preventDefault();
-                const touch = e.touches ? e.touches[0] : e;
-
-                const dx = touch.clientX - startX;
-                const dy = touch.clientY - startY;
-
-                element.style.left = (initialX + dx) + 'px';
-                element.style.top = (initialY + dy) + 'px';
+                element.style.left = (initialLeft + dx) + 'px';
+                element.style.top = (initialTop + dy) + 'px';
                 element.style.right = 'auto';
-            }
+            });
 
-            function onEnd() {
-                window.removeEventListener('mousemove', onMove);
-                window.removeEventListener('mouseup', onEnd);
-                window.removeEventListener('touchmove', onMove);
-                window.removeEventListener('touchend', onEnd);
-            }
+            const stopDrag = (e) => {
+                if (isDragging) {
+                    isDragging = false;
+                    try { handle.releasePointerCapture(e.pointerId); } catch(err) {}
+                }
+            };
 
-            handle.addEventListener('mousedown', onStart);
-            handle.addEventListener('touchstart', onStart, { passive: false });
+            handle.addEventListener('pointerup', stopDrag);
+            handle.addEventListener('pointercancel', stopDrag);
         }
 
-        // --- Clock & Loader Setup ---
+        // --- Clock & Loader ---
         setTimeout(() => {
             const loader = document.getElementById('loader');
             if (loader) {
                 loader.style.opacity = '0';
                 setTimeout(() => loader.style.display = 'none', 500);
             }
-            speak("System online, Sir. Awaiting input.");
+            speak("System online, Sir. Awaiting directives.");
         }, 1200);
 
         setInterval(() => {
@@ -414,12 +408,12 @@
             } catch (e) {}
         }
 
-        // --- Panel Repositioning Mechanics ---
+        // --- Panel Positioning ---
         function applyPanelPosition(panel, pos) {
             const workspace = document.getElementById('workspace');
             const wWidth = workspace.clientWidth;
             const wHeight = workspace.clientHeight;
-            const pWidth = Math.min(300, wWidth * 0.85);
+            const pWidth = Math.min(300, wWidth * 0.88);
             const pHeight = 220;
 
             switch (pos) {
@@ -479,7 +473,7 @@
             return panel;
         }
 
-        // --- Command & NLP Engine ---
+        // --- Command & Query Logic ---
         async function processInput() {
             const inputField = document.getElementById('userInput');
             if (!inputField) return;
@@ -489,14 +483,14 @@
             inputField.value = '';
             const textLower = rawText.toLowerCase();
 
-            // 1. Clear Directive
+            // Clear directive
             if (textLower.includes('clear') || textLower.includes('close')) {
                 document.querySelectorAll('.hud-panel').forEach(p => p.remove());
-                speak("Cleared active HUD windows.");
+                speak("Cleared all active HUD modules.");
                 return;
             }
 
-            // 2. Enlarge / Resize Directive
+            // Enlarge directive
             if (textLower.includes('enlarge') || textLower.includes('expand') || textLower.includes('make bigger')) {
                 if (activePanel) {
                     activePanel.classList.add('expanded');
@@ -505,7 +499,7 @@
                 }
             }
 
-            // 3. Move / Reposition Directive
+            // Position directives
             const isMoveOnly = textLower.includes('move') || textLower.includes('put it') || textLower.includes('shift');
             let detectedPos = null;
             if (textLower.includes('left')) detectedPos = 'left';
@@ -520,7 +514,7 @@
                 return;
             }
 
-            // 4. Topic Extraction
+            // Clean Topic Cleaners
             let targetPos = detectedPos || 'right';
             let query = rawText.replace(/hi jarvis|jarvis|move this to the|move to the|put this on the|move this|on the left|on left|on the right|on right|on top|at top|on bottom|at bottom|in the middle|in center|to the left|to the right|show me|tell me about|what is|who is|search for|add the latest|add latest|get latest|news about|news on/gi, '').trim();
 
@@ -530,52 +524,48 @@
             await fetchUniversalTelemetry(query, targetPos);
         }
 
-        // --- Universal Data Fetching Engine ---
+        // --- Universal Multi-API Fetch Engine ---
         async function fetchUniversalTelemetry(query, pos) {
-            const panel = createPanel(`<h3>TELEMETRY: ${query.toUpperCase()}</h3><p>Querying external nodes...</p>`, pos);
+            const panel = createPanel(`<h3>TELEMETRY: ${query.toUpperCase()}</h3><p>Connecting to external stream...</p>`, pos);
             const qLower = query.toLowerCase();
 
-            // 1. Sports Specific API (NBA & NFL via ESPN)
-            if (qLower.includes('nba') || qLower.includes('nfl') || qLower.includes('falcons') || qLower.includes('basketball') || qLower.includes('football')) {
-                const league = (qLower.includes('nba') || qLower.includes('basketball')) ? 'basketball/nba' : 'football/nfl';
+            // 1. NBA / Basketball Feeds
+            if (qLower.includes('nba') || qLower.includes('basketball')) {
                 try {
-                    const espnRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${league}/news`);
-                    if (espnRes.ok) {
-                        const espnData = await espnRes.json();
-                        if (espnData.articles && espnData.articles.length > 0) {
-                            let articlesHTML = `<h3>${league.split('/')[1].toUpperCase()} TELEMETRY</h3>`;
-                            espnData.articles.slice(0, 4).forEach(item => {
-                                articlesHTML += `
-                                    <div class="info-card" onclick="this.classList.toggle('expanded-card')">
-                                        <strong>${item.headline}</strong>
-                                        <p>${item.description || 'Tap to expand headline detail.'}</p>
-                                    </div>
-                                `;
-                            });
-                            panel.innerHTML = `
-                                <div class="drag-header">
-                                    <span class="drag-handle">::: DRAG :::</span>
-                                    <div class="header-actions">
-                                        <button class="action-btn" onclick="toggleEnlarge(this)">MAX</button>
-                                        <button class="action-btn close-btn" onclick="this.closest('.hud-panel').remove()">X</button>
-                                    </div>
-                                </div>
-                                ${articlesHTML}
-                            `;
-                            speak(`${league.split('/')[1].toUpperCase()} telemetry loaded, Sir.`);
+                    const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news');
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.articles && data.articles.length > 0) {
+                            renderArticles(panel, "NBA TELEMETRY", data.articles);
+                            speak("NBA telemetry feed loaded, Sir.");
                             return;
                         }
                     }
                 } catch (e) {}
             }
 
-            // 2. Wikipedia API Engine (White House, Science, People, Entities)
+            // 2. NFL / Football Feeds
+            if (qLower.includes('nfl') || qLower.includes('football') || qLower.includes('falcons')) {
+                try {
+                    const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/news');
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.articles && data.articles.length > 0) {
+                            renderArticles(panel, "NFL TELEMETRY", data.articles);
+                            speak("NFL telemetry feed loaded, Sir.");
+                            return;
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            // 3. Wikipedia Open API Engine (White House, Places, Concepts)
             try {
-                const wikiRes = await fetch('https://en.wikipedia.org/w/api.php?action=opensearch&search=' + encodeURIComponent(query) + '&limit=1&namespace=0&format=json&origin=*');
-                if (wikiRes.ok) {
-                    const wikiData = await wikiRes.json();
-                    if (wikiData && wikiData[1] && wikiData[1].length > 0) {
-                        const pageTitle = wikiData[1][0];
+                const searchRes = await fetch('https://en.wikipedia.org/w/api.php?action=opensearch&search=' + encodeURIComponent(query) + '&limit=1&namespace=0&format=json&origin=*');
+                if (searchRes.ok) {
+                    const searchData = await searchRes.json();
+                    if (searchData && searchData[1] && searchData[1].length > 0) {
+                        const pageTitle = searchData[1][0];
                         const summaryRes = await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(pageTitle));
                         if (summaryRes.ok) {
                             const summaryData = await summaryRes.json();
@@ -593,7 +583,7 @@
                                         <p>${summaryData.extract}</p>
                                     </div>
                                 `;
-                                speak(summaryData.extract.substring(0, 110) + '...');
+                                speak(summaryData.extract.substring(0, 100) + '...');
                                 return;
                             }
                         }
@@ -601,32 +591,7 @@
                 }
             } catch (e) {}
 
-            // 3. DuckDuckGo Instant Answer Fallback
-            try {
-                const ddgRes = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&origin=*`);
-                if (ddgRes.ok) {
-                    const ddgData = await ddgRes.json();
-                    if (ddgData.AbstractText) {
-                        panel.innerHTML = `
-                            <div class="drag-header">
-                                <span class="drag-handle">::: DRAG :::</span>
-                                <div class="header-actions">
-                                    <button class="action-btn" onclick="toggleEnlarge(this)">MAX</button>
-                                    <button class="action-btn close-btn" onclick="this.closest('.hud-panel').remove()">X</button>
-                                </div>
-                            </div>
-                            <h3>${query.toUpperCase()}</h3>
-                            <div class="info-card">
-                                <p>${ddgData.AbstractText}</p>
-                            </div>
-                        `;
-                        speak("Data feed synchronized.");
-                        return;
-                    }
-                }
-            } catch (e) {}
-
-            // 4. Default Telemetry Readout
+            // Fallback Readout
             panel.innerHTML = `
                 <div class="drag-header">
                     <span class="drag-handle">::: DRAG :::</span>
@@ -637,14 +602,36 @@
                 </div>
                 <h3>TELEMETRY: ${query.toUpperCase()}</h3>
                 <div class="info-card">
-                    <strong>SYSTEM FEED ACTIVE</strong>
-                    <p>Live stream established for '${query}'.</p>
+                    <strong>FEED INITIALIZED</strong>
+                    <p>Live parameters calculated for '${query}'.</p>
                 </div>
             `;
-            speak("Telemetry readout generated for " + query + ".");
+            speak("Telemetry readout generated.");
         }
 
-        // --- Voice Mic Interface ---
+        function renderArticles(panel, title, articles) {
+            let content = `<h3>${title}</h3>`;
+            articles.slice(0, 4).forEach(item => {
+                content += `
+                    <div class="info-card">
+                        <strong>${item.headline}</strong>
+                        <p>${item.description || 'Live summary update.'}</p>
+                    </div>
+                `;
+            });
+            panel.innerHTML = `
+                <div class="drag-header">
+                    <span class="drag-handle">::: DRAG :::</span>
+                    <div class="header-actions">
+                        <button class="action-btn" onclick="toggleEnlarge(this)">MAX</button>
+                        <button class="action-btn close-btn" onclick="this.closest('.hud-panel').remove()">X</button>
+                    </div>
+                </div>
+                ${content}
+            `;
+        }
+
+        // --- Voice Mic Handler ---
         function startVoice() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
@@ -666,7 +653,7 @@
             };
 
             recognition.onerror = () => {
-                speak("Voice input error, Sir.");
+                speak("Voice recognition error.");
             };
         }
     </script>
