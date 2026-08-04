@@ -172,22 +172,16 @@
             box-shadow: none;
         }
 
-        /* RESPONSE CARD STYLING & DRAGGING */
+        /* RESPONSE CARD STYLING */
         .response-card {
             background: rgba(0, 240, 255, 0.08);
             border: 1px solid rgba(0, 240, 255, 0.4);
             padding: 12px;
             margin-bottom: 12px;
             border-radius: 6px;
-            cursor: grab;
             transition: background 0.2s, box-shadow 0.2s, transform 0.3s ease, width 0.3s ease;
             position: relative;
             z-index: 20;
-            touch-action: none;
-        }
-
-        .response-card:active {
-            cursor: grabbing;
         }
 
         .response-card:hover {
@@ -257,7 +251,7 @@
             font-size: 0.9rem;
         }
 
-        /* VITALS AND CALENDAR */
+        /* VITALS, CALENDAR, NOTES */
         .vital-row {
             display: flex;
             justify-content: space-between;
@@ -272,14 +266,14 @@
             font-weight: bold;
         }
 
-        .calendar-list {
+        .calendar-list, .notes-list {
             margin-top: 10px;
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
 
-        .calendar-item {
+        .calendar-item, .note-item {
             background: rgba(0, 240, 255, 0.08);
             border: 1px solid rgba(0, 240, 255, 0.3);
             padding: 8px;
@@ -290,12 +284,12 @@
             align-items: center;
         }
 
-        .calendar-item .event-title {
+        .calendar-item .event-title, .note-item .note-text {
             color: #fff;
             font-weight: bold;
         }
 
-        .calendar-item .event-date {
+        .calendar-item .event-date, .note-item .note-date {
             color: #ff007f;
             font-size: 0.75rem;
         }
@@ -536,13 +530,25 @@
                     <div class="vital-row"><span>CPU TEMP:</span> <span id="val-temp" class="vital-value">42°C</span></div>
                     <div class="vital-row"><span>CORE LOAD:</span> <span id="val-load" class="vital-value">18%</span></div>
      
-                    <div style="margin-top: 15px; border-bottom: 1px solid rgba(0, 240, 255, 0.3); padding-bottom: 4px; font-weight: bold;">GOOGLE CALENDAR SYNC</div>
+                    <div style="margin-top: 15px; border-bottom: 1px solid rgba(0, 240, 255, 0.3); padding-bottom: 4px; font-weight: bold;">NOTES & SCHEMATICS</div>
+                    <div class="cal-input-group">
+                        <input type="text" id="noteInput" placeholder="Jot down a note...">
+                        <button onclick="addNoteFromUI()">SAVE NOTE</button>
+                    </div>
+                    <div id="notes-list" class="notes-list">
+                    </div>
+
+                    <div style="margin-top: 18px; border-bottom: 1px solid rgba(0, 240, 255, 0.3); padding-bottom: 4px; font-weight: bold;">GOOGLE CALENDAR SYNC</div>
                     <div class="cal-input-group">
                         <input type="text" id="eventTitle" placeholder="Event Description...">
                         <input type="date" id="eventDate">
                         <button onclick="addCalendarEventFromUI()">ADD EVENT</button>
                     </div>
                     <div id="calendar-list" class="calendar-list">
+                    </div>
+
+                    <div style="margin-top: 18px; border-bottom: 1px solid rgba(0, 240, 255, 0.3); padding-bottom: 4px; font-weight: bold;">SAVED FAVORITE WEBSITES</div>
+                    <div id="favorite-websites-grid" class="site-links-grid" style="margin-top:6px;">
                     </div>
 
                     <div style="margin-top: 18px; border-bottom: 1px solid rgba(0, 240, 255, 0.3); padding-bottom: 4px; font-weight: bold;">DATABASE & SOURCES</div>
@@ -610,15 +616,15 @@
                     <button class="close-btn" onclick="closePanel('right-panel')">✕</button>
                 </div>
                 <div id="right-content">  
-                    <p style="opacity: 0.7;">Greetings, Sir. Wake words active. Speak or type commands...</p>
+                    <p style="opacity: 0.7;">Greetings, Sir. Speak or type instructions...</p>
                 </div>  
             </div>  
         </div>  
 
         <div class="terminal-area">  
-            <div id="log" class="log-box">SYSTEM: Standby mode active. Listening for wake words...</div>  
+            <div id="log" class="log-box">SYSTEM: Standby mode active. Listening for commands...</div>  
             <div class="controls">  
-                <input type="text" id="userInput" placeholder="Ask anything or speak wake word..." onkeydown="if(event.key==='Enter') processInput()">  
+                <input type="text" id="userInput" placeholder="Ask anything, say 'take a note...', 'help me build...'" onkeydown="if(event.key==='Enter') processInput()">  
                 <button onclick="processInput()">SEND</button>  
                 <button id="micBtn" onclick="toggleVoiceListening()">MIC: ON</button>  
             </div>  
@@ -631,7 +637,14 @@
             { title: "Family Game Night", date: "2026-08-07" },
             { title: "Mom's Birthday", date: "2026-08-15" }
         ];
+        let userNotes = JSON.parse(localStorage.getItem('jarvis_notes')) || [
+            { text: "Check suit telemetry for flight test", date: "2026-08-01" }
+        ];
         let jarvisMemory = JSON.parse(localStorage.getItem('jarvis_memory')) || {};
+        let favoriteWebsites = JSON.parse(localStorage.getItem('jarvis_favorites')) || [
+            { name: "YouTube", url: "https://www.youtube.com" },
+            { name: "Google", url: "https://www.google.com" }
+        ];
         let recognition = null;
         let isListening = false;
 
@@ -644,6 +657,8 @@
 
         window.onload = () => {
             renderCalendar();
+            renderNotes();
+            renderFavorites();
             initVoiceRecognition();
         };
 
@@ -698,6 +713,14 @@
             availableVoices = window.speechSynthesis.getVoices();
         };  
 
+        function stopSpeaking() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            const log = document.getElementById('log');
+            if (log) log.innerText = "SYSTEM: Audio stopped by user.";
+        }
+
         function closePanel(panelId) {
             document.getElementById(panelId).style.display = 'none';
         }
@@ -709,7 +732,9 @@
 
         function saveStateToDisk() {
             localStorage.setItem('jarvis_calendar', JSON.stringify(familyCalendar));
+            localStorage.setItem('jarvis_notes', JSON.stringify(userNotes));
             localStorage.setItem('jarvis_memory', JSON.stringify(jarvisMemory));
+            localStorage.setItem('jarvis_favorites', JSON.stringify(favoriteWebsites));
         }
 
         function renderCalendar() {
@@ -722,6 +747,60 @@
                 item.innerHTML = `<div><div class="event-title">${evt.title}</div><div class="event-date">📅 ${evt.date}</div></div>
                 <button class="expand-btn" style="padding:2px 5px;" onclick="syncToGoogleCalendar('${encodeURIComponent(evt.title)}', '${evt.date}')">Sync</button>`;
                 list.appendChild(item);
+            });
+            saveStateToDisk();
+        }
+
+        function renderNotes() {
+            const list = document.getElementById('notes-list');
+            if (!list) return;
+            list.innerHTML = '';
+            if (userNotes.length === 0) {
+                list.innerHTML = '<div style="font-size:0.75rem; opacity:0.6;">No saved notes. Say "take a note..."</div>';
+                return;
+            }
+            userNotes.forEach((note, index) => {
+                const item = document.createElement('div');
+                item.className = 'note-item';
+                item.innerHTML = `<div><div class="note-text">• ${note.text}</div><div class="note-date">🕒 ${note.date}</div></div>
+                <button class="expand-btn" style="padding:2px 5px;" onclick="deleteNote(${index})">✕</button>`;
+                list.appendChild(item);
+            });
+            saveStateToDisk();
+        }
+
+        function deleteNote(index) {
+            userNotes.splice(index, 1);
+            renderNotes();
+            speak("Note deleted, Sir.");
+        }
+
+        function addNoteFromUI() {
+            const input = document.getElementById('noteInput');
+            if (!input || !input.value.trim()) return;
+            const text = input.value.trim();
+            const dateStr = new Date().toLocaleDateString();
+            userNotes.push({ text: text, date: dateStr });
+            renderNotes();
+            speak(`Jotted down note: ${text}`);
+            input.value = '';
+        }
+
+        function renderFavorites() {
+            const grid = document.getElementById('favorite-websites-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            if (favoriteWebsites.length === 0) {
+                grid.innerHTML = '<div style="font-size:0.75rem; opacity:0.6;">No favorite websites saved yet.</div>';
+                return;
+            }
+            favoriteWebsites.forEach((site) => {
+                const a = document.createElement('a');
+                a.href = site.url;
+                a.target = '_blank';
+                a.className = 'site-link';
+                a.innerHTML = `<span>★ ${site.name}</span> ↗`;
+                grid.appendChild(a);
             });
             saveStateToDisk();
         }
@@ -743,7 +822,7 @@
             familyCalendar.push({ title: title, date: dateStr });
             renderCalendar();
 
-            speak(`Added ${title} to your calendar and opening Google Calendar event sync, Sir.`);
+            speak(`Adding ${title} to your Google Calendar, Sir.`);
             syncToGoogleCalendar(encodeURIComponent(title), dateStr);
 
             titleInput.value = '';
@@ -753,7 +832,6 @@
         /* CONTINUOUS VOICE & WAKE WORD RECOGNITION ENGINE */
         function initVoiceRecognition() {
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                console.log("Speech recognition not supported in browser.");
                 return;
             }
 
@@ -795,6 +873,55 @@
                 try { recognition.start(); } catch(e) {}
                 if (micBtn) micBtn.innerText = "MIC: LISTENING";
             }
+        }
+
+        /* CAPABILITIES DISPLAY FUNCTION */
+        function listJarvisCapabilities() {
+            showPanel('right');
+            const rightContent = document.getElementById('right-content');
+            rightContent.innerHTML = `
+                <div class="response-card enlarged">
+                    <div class="card-source">CORE SYSTEM SPECS</div>
+                    <div class="card-title">J.A.R.V.I.S. SYSTEM CAPABILITIES</div>
+                    <div class="card-snippet">
+                        • <b>Take Notes for Later:</b> Jot down notes via voice ("Jarvis take a note...") and store them permanently.<br>
+                        • <b>Project & Build Assistant:</b> Generate step-by-step schematics and blueprints for anything you want to build ("Help me build...").<br>
+                        • <b>Calendar Management:</b> Read out daily schedules, add events, and sync directly with Google Calendar.<br>
+                        • <b>Favorite Websites Storage:</b> Save any website to permanent memory and launch it on voice command.<br>
+                        • <b>Voice & Wake Word Control:</b> Continuous listening for wake phrases ("Wake up daddys home", "Hey jarvis", "Good morning...").<br>
+                        • <b>Instant Stop Override:</b> Say "stop" or "quiet" at any moment to cancel speech immediately.<br>
+                        • <b>Live Search & Data Feeds:</b> Fetch news, sports, politics, science, and history from live RSS networks.
+                    </div>
+                </div>
+            `;
+            speak("My capabilities include taking notes for later, helping you design and build project blueprints, managing your calendar, saving favorite websites, and running live search operations.");
+        }
+
+        /* BUILD ASSISTANT GENERATOR */
+        function generateBuildSchematic(itemToBuild) {
+            showPanel('right');
+            const rightContent = document.getElementById('right-content');
+            rightContent.innerHTML = `
+                <div class="response-card enlarged">
+                    <div class="card-source">STARK ENGINEERING WORKSHOP</div>
+                    <div class="card-title">PROJECT SCHEMATIC: ${itemToBuild.toUpperCase()}</div>
+                    <div class="card-snippet">
+                        <b>PHASE 1: RESEARCH & MATERIALS</b><br>
+                        • List key components, raw materials, and tools required for ${itemToBuild}.<br>
+                        • Establish target dimensions, energy constraints, and safety tolerances.<br><br>
+                        <b>PHASE 2: PROTOTYPING & CAD MODELING</b><br>
+                        • Generate 3D geometry structure and sub-assembly schematics.<br>
+                        • Wire power distribution circuits and micro-controller architecture.<br><br>
+                        <b>PHASE 3: ASSEMBLY & TESTING</b><br>
+                        • Mount primary structural chassis and integrate core control loops.<br>
+                        • Perform full system telemetry check and stress test calibrations.
+                    </div>
+                    <div class="card-actions">
+                        <a href="https://www.google.com/search?q=how+to+build+${encodeURIComponent(itemToBuild)}" target="_blank" class="link-btn">SEARCH GUIDES ↗</a>
+                    </div>
+                </div>
+            `;
+            speak(`I've initialized engineering schematics and a 3-phase build blueprint for ${itemToBuild}, Sir. Review the right HUD display.`);
         }
 
         /* LIVE NEWS & SEARCH FETCH ENGINE */
@@ -885,11 +1012,96 @@
             inputField.value = '';  
             const qLower = query.toLowerCase().replace(/['’]/g, '');
 
-            // ==========================================
-            // WAKE WORDS INTEGRATION (3 EXACT PHRASES)
-            // ==========================================
+            // ------------------------------------------
+            // 1. STOP AUDIO / QUIET COMMAND
+            // ------------------------------------------
+            if (qLower === 'stop' || qLower === 'jarvis stop' || qLower === 'quiet' || qLower === 'shut up' || qLower.includes('stop talking') || qLower.includes('stop reading')) {
+                stopSpeaking();
+                return;
+            }
 
-            // 1. WAKE WORD 1: "Wake up daddys home"
+            // ------------------------------------------
+            // 2. NOTES SYSTEM (TAKE NOTES FOR LATER)
+            // ------------------------------------------
+            if (qLower.includes('take a note') || qLower.includes('jot down') || qLower.includes('write down') || (qLower.includes('note') && qLower.includes('for later'))) {
+                let noteText = query.replace(/take a note/i, '').replace(/jot down/i, '').replace(/write down/i, '').replace(/for later/i, '').replace(/jarvis/i, '').replace(/note/i, '').trim();
+                if (!noteText) noteText = "Important task logged for later.";
+
+                const dateStr = new Date().toLocaleDateString();
+                userNotes.push({ text: noteText, date: dateStr });
+                renderNotes();
+                showPanel('left');
+                const noteElem = document.getElementById('notes-list');
+                if (noteElem) noteElem.scrollIntoView({ behavior: 'smooth' });
+
+                speak(`I've jotted that down in your notes, Sir: ${noteText}`);
+                return;
+            }
+
+            if (qLower.includes('read my notes') || qLower.includes('show my notes') || qLower.includes('what are my notes')) {
+                showPanel('left');
+                const noteElem = document.getElementById('notes-list');
+                if (noteElem) noteElem.scrollIntoView({ behavior: 'smooth' });
+
+                if (userNotes.length === 0) {
+                    speak("You have no saved notes for later, Sir.");
+                } else {
+                    let summary = userNotes.map(n => n.text).join('. ');
+                    speak(`Here are your saved notes, Sir: ${summary}`);
+                }
+                return;
+            }
+
+            // ------------------------------------------
+            // 3. BUILD & ENGINEERING ASSISTANT
+            // ------------------------------------------
+            if (qLower.includes('help me build') || qLower.includes('how to build') || qLower.includes('design') || qLower.includes('build blueprint')) {
+                let itemToBuild = query.replace(/help me build/i, '').replace(/how to build/i, '').replace(/build/i, '').replace(/design/i, '').replace(/jarvis/i, '').trim();
+                if (!itemToBuild) itemToBuild = "Custom Project Prototype";
+
+                generateBuildSchematic(itemToBuild);
+                return;
+            }
+
+            // ------------------------------------------
+            // 4. CAPABILITIES INQUIRY
+            // ------------------------------------------
+            if (qLower.includes('capabilities') || qLower.includes('what can you do') || qLower.includes('what are your features') || qLower.includes('what are you capable of')) {
+                listJarvisCapabilities();
+                return;
+            }
+
+            // ------------------------------------------
+            // 5. FAVORITE WEBSITES COMMANDS
+            // ------------------------------------------
+            if (qLower.includes('add') && (qLower.includes('favorite website') || qLower.includes('favorite site') || qLower.includes('favorites list'))) {
+                let cleanName = query.replace(/add/i, '').replace(/to (my )?(favorite websites|favorite sites|favorites list|favorites)/i, '').replace(/website|site/i, '').trim();
+                
+                if (!cleanName) cleanName = "New Favorite";
+                let targetUrl = cleanName.toLowerCase().startsWith('http') ? cleanName : `https://www.${cleanName.replace(/\s+/g, '')}.com`;
+
+                favoriteWebsites.push({ name: cleanName, url: targetUrl });
+                renderFavorites();
+                showPanel('left');
+                speak(`Added ${cleanName} to your saved favorite websites, Sir.`);
+                return;
+            }
+
+            if (qLower.includes('favorite website') || qLower.includes('favorite site') || qLower.includes('show my favorites') || qLower.includes('open favorite')) {
+                showPanel('left');
+                const favMatch = favoriteWebsites.find(s => qLower.includes(s.name.toLowerCase()));
+                if (favMatch) {
+                    speak(`Opening your favorite website, ${favMatch.name}, Sir.`);
+                    window.open(favMatch.url, '_blank');
+                } else {
+                    speak("Here are your saved favorite websites on your left HUD panel, Sir.");
+                }
+                return;
+            }
+
+            // ------------------------------------------
+            // 6. WAKE WORDS INTEGRATION
+            // ------------------------------------------
             if (qLower.includes('wake up daddys home') || qLower.includes('wake up daddy home')) {
                 speak("Welcome back, Sir. All systems operational and standing by.");
                 const arc = document.getElementById('arcReactor');
@@ -898,14 +1110,12 @@
                 return;
             }
 
-            // 2. WAKE WORD 2: "Hey jarvis" / "Hi jarvis" / "Hello jarvis"
             if (qLower === 'hey jarvis' || qLower === 'hi jarvis' || qLower === 'hello jarvis') {
                 const randomGreeting = GREETING_RESPONSES[Math.floor(Math.random() * GREETING_RESPONSES.length)];
                 speak(randomGreeting);
                 return;
             }
 
-            // 3. WAKE WORD 3: "Good morning jarvis tell me what weve got on the calander today"
             if (qLower.includes('good morning jarvis') || qLower.includes('what weve got on the calendar') || qLower.includes('what we got on the calendar') || qLower.includes('tell me what weve got on the calendar today')) {
                 showPanel('left');
                 const calElem = document.getElementById('calendar-list');
@@ -920,7 +1130,36 @@
                 return;
             }
 
-            // --- PERMANENT MEMORY COMMANDS ---
+            // ------------------------------------------
+            // 7. CALENDAR INTENTS
+            // ------------------------------------------
+            if (qLower.includes('add') && (qLower.includes('calendar') || qLower.includes('calander') || qLower.includes('event') || qLower.includes('schedule'))) {
+                let cleanTitle = query.replace(/add/i, '').replace(/to (my |the )?(google )?(calendar|calander)/i, '').replace(/schedule/i, '').trim();
+                const today = new Date().toISOString().split('T')[0];
+                const eventName = cleanTitle || "New Event";
+                
+                familyCalendar.push({ title: eventName, date: today });
+                renderCalendar();
+                showPanel('left');
+
+                speak(`Added ${eventName} to your calendar list, Sir. Opening Google Calendar now.`);
+                syncToGoogleCalendar(encodeURIComponent(eventName), today);
+                return;
+            }
+
+            if (qLower.includes('calendar') || qLower.includes('calander')) {
+                showPanel('left');
+                const calElem = document.getElementById('calendar-list');
+                if (calElem) calElem.scrollIntoView({ behavior: 'smooth' });
+                
+                speak("Opening Google Calendar for you, Sir.");
+                window.open("https://calendar.google.com", "_blank");
+                return;
+            }
+
+            // ------------------------------------------
+            // 8. PERMANENT MEMORY COMMANDS
+            // ------------------------------------------
             if (qLower.startsWith('remember ') || qLower.startsWith('save ')) {
                 const parts = query.replace(/remember|save/i, '').trim().split(/ as | is /i);
                 if (parts.length >= 2) {
@@ -941,29 +1180,9 @@
                 }
             }
 
-            // --- GOOGLE CALENDAR COMMANDS ---
-            if (qLower.includes('open calendar') || qLower.includes('open calander') || qLower.includes('show calendar') || qLower.includes('open google calendar')) {
-                showPanel('left');
-                const calElem = document.getElementById('calendar-list');
-                if (calElem) calElem.scrollIntoView({ behavior: 'smooth' });
-                speak("Opening Google Calendar for you, Sir.");
-                window.open("https://calendar.google.com", "_blank");
-                return;
-            }
-
-            // --- ADD EVENT VIA VOICE / PROMPT ---
-            if (qLower.includes('add') && (qLower.includes('calendar') || qLower.includes('event') || qLower.includes('schedule') || qLower.includes('appointment'))) {
-                let cleanTitle = query.replace(/add/i, '').replace(/to (my |the )?(google )?calendar/i, '').replace(/schedule/i, '').trim();
-                const today = new Date().toISOString().split('T')[0];
-                familyCalendar.push({ title: cleanTitle || "New Event", date: today });
-                renderCalendar();
-                showPanel('left');
-                speak(`Added ${cleanTitle || "New Event"} to your Google Calendar list, Sir.`);
-                syncToGoogleCalendar(encodeURIComponent(cleanTitle || "New Event"), today);
-                return;
-            }
-
-            // --- INTERFACE CONTROL COMMANDS ---
+            // ------------------------------------------
+            // 9. INTERFACE COMMANDS
+            // ------------------------------------------
             if (qLower.includes('move this to the other side') || qLower.includes('move to the other side') || qLower.includes('swap sides') || qLower.includes('switch side')) {
                 const workspace = document.getElementById('workspace');
                 if (workspace.style.gridTemplateColumns === '380px 1fr 340px') {
@@ -1005,7 +1224,7 @@
                 return;
             }
 
-            // LIVE SEARCH & NEWS FOR SPORTS, POLITICS, SCIENCE, GENERAL QUERIES
+            // DEFAULT: LIVE NEWS & SEARCH QUERY
             await fetchLiveNewsAndData(query);
         }
     </script>  
