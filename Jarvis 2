@@ -3,9 +3,10 @@
 <head>  
     <meta charset="UTF-8">  
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
-    <title>J.A.R.V.I.S. Core Interface v8.5</title>  
+    <title>J.A.R.V.I.S. Core Interface v6.1</title>  
     <style>  
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
         * {  
             box-sizing: border-box;  
             margin: 0;
@@ -220,10 +221,9 @@
             margin-top: 10px;
             display: flex;
             justify-content: flex-end;
-            gap: 6px;
         }
 
-        .expand-btn, .link-btn {
+        .expand-btn {
             background: rgba(0, 240, 255, 0.2);
             border: 1px solid #00f0ff;
             color: #00f0ff;
@@ -232,18 +232,16 @@
             cursor: pointer;
             border-radius: 3px;
             font-family: 'Orbitron', sans-serif;
-            text-decoration: none;
-            display: inline-block;
         }
 
-        .expand-btn:hover, .link-btn:hover {
+        .expand-btn:hover {
             background: #00f0ff;
             color: #000;
         }
 
         .response-card.enlarged {
             width: 100% !important;
-            transform: scale(1.03);
+            transform: scale(1.05);
             background: rgba(2, 10, 25, 0.95);
             border: 2px solid #00f0ff;
             box-shadow: 0 0 25px rgba(0, 240, 255, 0.6);
@@ -257,55 +255,7 @@
             font-size: 0.9rem;
         }
 
-        /* CENTER CALENDAR MODAL OVERLAY */
-        #center-calendar-overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
-            width: 80%;
-            height: 82%;
-            background: rgba(2, 8, 20, 0.97);
-            border: 2px solid #00f0ff;
-            border-radius: 12px;
-            box-shadow: 0 0 40px rgba(0, 240, 255, 0.7);
-            z-index: 100;
-            display: none;
-            flex-direction: column;
-            padding: 18px;
-            transition: all 0.3s ease;
-        }
-
-        #center-calendar-overlay.active {
-            display: flex;
-            transform: translate(-50%, -50%) scale(1);
-        }
-
-        .overlay-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(0, 240, 255, 0.5);
-            padding-bottom: 10px;
-            margin-bottom: 12px;
-        }
-
-        .overlay-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.1rem;
-            color: #ffffff;
-            text-shadow: 0 0 10px #00f0ff;
-        }
-
-        .calendar-frame {
-            flex: 1;
-            width: 100%;
-            border: 1px solid rgba(0, 240, 255, 0.3);
-            border-radius: 6px;
-            background: #ffffff;
-        }
-
-        /* VITALS, CALENDAR, NOTES */
+        /* VITALS AND CALENDAR */
         .vital-row {
             display: flex;
             justify-content: space-between;
@@ -320,14 +270,29 @@
             font-weight: bold;
         }
 
-        .calendar-list, .notes-list {
+        .calendar-section {
+            margin-top: 15px;
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 6px;
+            padding: 10px;
+            background: rgba(0, 240, 255, 0.02);
+            transition: all 0.4s ease;
+        }
+
+        .calendar-section.highlight {
+            border-color: #00f0ff;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+            background: rgba(0, 240, 255, 0.1);
+        }
+
+        .calendar-list {
             margin-top: 10px;
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
 
-        .calendar-item, .note-item {
+        .calendar-item {
             background: rgba(0, 240, 255, 0.08);
             border: 1px solid rgba(0, 240, 255, 0.3);
             padding: 8px;
@@ -338,12 +303,12 @@
             align-items: center;
         }
 
-        .calendar-item .event-title, .note-item .note-text {
+        .calendar-item .event-title {
             color: #fff;
             font-weight: bold;
         }
 
-        .calendar-item .event-date, .note-item .note-date {
+        .calendar-item .event-date {
             color: #ff007f;
             font-size: 0.75rem;
         }
@@ -546,13 +511,6 @@
             box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
         }  
 
-        button.mic-active {
-            background: #ff0055 !important;
-            color: #ffffff !important;
-            box-shadow: 0 0 20px #ff0055 !important;
-            animation: pulse 1s infinite;
-        }
-
         button:hover {
             background: rgba(0, 240, 255, 0.4);
             box-shadow: 0 0 15px rgba(0, 240, 255, 0.6);
@@ -563,32 +521,6 @@
             color: #000;  
         }  
 
-        .ability-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .ability-item {
-            background: rgba(0, 240, 255, 0.1);
-            border-left: 3px solid #00f0ff;
-            padding: 8px;
-            border-radius: 3px;
-        }
-
-        .ability-title {
-            font-weight: bold;
-            color: #ffffff;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.8rem;
-        }
-
-        .ability-desc {
-            font-size: 0.78rem;
-            color: #a2f2ff;
-        }
-
         @keyframes spin { 100% { transform: rotate(360deg); } }  
         @keyframes spin-reverse { 100% { transform: rotate(-360deg); } }  
         @keyframes pulse { 0%, 100% { opacity: 0.7; transform: scale(0.98); } 50% { opacity: 1; transform: scale(1.02); } }  
@@ -598,7 +530,7 @@
 
     <div id="loader">  
         <div class="loader-ring"></div>  
-        <div class="loader-text">INITIALIZING STARK HUD v8.5...</div>  
+        <div class="loader-text">INITIALIZING STARK HUD v6.1...</div>  
     </div>  
 
     <div id="hud-container">  
@@ -608,7 +540,7 @@
         </header>  
 
         <div id="workspace" class="workspace">  
-            <div id="left-panel" class="hud-panel" ondragover="allowDrop(event)" ondrop="dropCard(event, 'left-content')">  
+            <div id="left-panel" class="hud-panel">  
                 <div class="panel-header">
                     <h3 id="left-title">SYSTEM & DATA NETWORK</h3>  
                     <button class="close-btn" onclick="closePanel('left-panel')">✕</button>
@@ -617,20 +549,15 @@
                     <div class="vital-row"><span>CPU TEMP:</span> <span id="val-temp" class="vital-value">42°C</span></div>
                     <div class="vital-row"><span>CORE LOAD:</span> <span id="val-load" class="vital-value">18%</span></div>
      
-                    <div style="margin-top: 15px; border-bottom: 1px solid rgba(0, 240, 255, 0.3); padding-bottom: 4px; font-weight: bold;">NOTES & SCHEMATICS</div>
-                    <div class="cal-input-group">
-                        <input type="text" id="noteInput" placeholder="Jot down a note...">
-                        <button onclick="addNoteFromUI()">SAVE NOTE</button>
+                    <div id="calendar-wrapper" class="calendar-section">
+                        <div style="border-bottom: 1px solid rgba(0, 240, 255, 0.3); padding-bottom: 4px; font-weight: bold;">FAMILY CALENDAR</div>
+                        <div class="cal-input-group">
+                            <input type="text" id="eventTitle" placeholder="Event Description...">
+                            <input type="date" id="eventDate">
+                            <button onclick="addCalendarEventFromUI()">ADD EVENT</button>
+                        </div>
+                        <div id="calendar-list" class="calendar-list"></div>
                     </div>
-                    <div id="notes-list" class="notes-list"></div>
-
-                    <div style="margin-top: 18px; border-bottom: 1px solid rgba(0, 240, 255, 0.3); padding-bottom: 4px; font-weight: bold;">FAMILY CALENDAR</div>
-                    <div class="cal-input-group">
-                        <input type="text" id="eventTitle" placeholder="Event Description...">
-                        <input type="date" id="eventDate">
-                        <button onclick="addCalendarEventFromUI()">ADD EVENT</button>
-                    </div>
-                    <div id="calendar-list" class="calendar-list"></div>
 
                     <div style="margin-top: 18px; border-bottom: 1px solid rgba(0, 240, 255, 0.3); padding-bottom: 4px; font-weight: bold;">DATABASE & SOURCES</div>
                     
@@ -678,7 +605,7 @@
                 </div>  
             </div>  
 
-            <div class="logo-container" id="center-zone" ondragover="allowDrop(event)" ondrop="dropCard(event, 'center-dropped-cards')">  
+            <div class="logo-container">  
                 <div id="arcReactor" class="arc-reactor">
                     <div class="arc-outer-ring"></div>
                     <div class="arc-segment-ring"></div>
@@ -689,10 +616,9 @@
                         </div>
                     </div>
                 </div>
-                <div id="center-dropped-cards" style="position: absolute; top: 10px; width: 90%; max-height: 90%; overflow-y: auto; z-index: 30;"></div>
             </div>  
 
-            <div id="right-panel" class="hud-panel" ondragover="allowDrop(event)" ondrop="dropCard(event, 'right-content')">  
+            <div id="right-panel" class="hud-panel">  
                 <div class="panel-header">
                     <h3 id="right-title">RESPONSE STACK</h3>  
                     <button class="close-btn" onclick="closePanel('right-panel')">✕</button>
@@ -706,32 +632,21 @@
         <div class="terminal-area">  
             <div id="log" class="log-box">SYSTEM: Standby mode active. Permanent memory persistent.</div>  
             <div class="controls">  
-                <input type="text" id="userInput" placeholder="Ask anything, say 'Jarvis what are your special abilities', or 'remember my name is Tony'..." onkeydown="if(event.key==='Enter') processInput()">  
+                <input type="text" id="userInput" placeholder="Ask anything, say 'open my calendar', or 'remember my name is Tony'..." onkeydown="if(event.key==='Enter') processInput()">  
                 <button onclick="processInput()">SEND</button>  
-                <button id="micBtn" onclick="toggleVoiceListening()">🎙️ MIC: OFF</button>  
+                <button onclick="startVoice()">MIC</button>  
             </div>  
         </div>  
     </div>  
 
-    <div id="center-calendar-overlay">
-        <div class="overlay-header">
-            <div class="overlay-title">GOOGLE CALENDAR // HUD CENTER OVERLAY</div>
-            <button class="close-btn" onclick="hideCenterCalendar()" style="font-size:1.2rem;">✕ CLOSE</button>
-        </div>
-        <iframe class="calendar-frame" src="https://calendar.google.com/calendar/embed?src=en.usa%23holiday%40group.v.calendar.google.com&ctz=America%2FNew_York"></iframe>
-    </div>
-
     <script>  
         let availableVoices = [];
+        /* 100% PERMANENT MEMORY STORAGE INITIALIZATION */
         let familyCalendar = JSON.parse(localStorage.getItem('jarvis_calendar')) || [
-            { id: 1, title: "Family Game Night", date: "2026-08-07", time: "19:00" },
-            { id: 2, title: "Mom's Birthday", date: "2026-08-15", time: "12:00" }
+            { id: 1, title: "Family Game Night", date: "2026-08-07" },
+            { id: 2, title: "Mom's Birthday", date: "2026-08-15" }
         ];
-        let userNotes = JSON.parse(localStorage.getItem('jarvis_notes')) || [];
         let jarvisMemory = JSON.parse(localStorage.getItem('jarvis_memory')) || {};
-        let recognition = null;
-        let isListening = false;
-        let lastDraggedCardId = null;
 
         const GREETINGS = [
             "hey jarvis", "hi jarvis", "hello jarvis", "jarvis", "hey", "hello", 
@@ -744,23 +659,20 @@
             "Online and fully operational, Sir."
         ];
 
-        /* SAFE INITIALIZATION TO PREVENT LOADING OVERLAY STICKING */
-        window.addEventListener('DOMContentLoaded', () => {
-            try { renderCalendar(); } catch(e) {}
-            try { renderNotes(); } catch(e) {}
-            try { setupVoiceRecognition(); } catch(e) {}
+        window.onload = () => {
+            renderCalendar();
+        };
 
-            setTimeout(() => {  
-                const loader = document.getElementById('loader');  
-                if (loader) {  
-                    loader.style.opacity = '0';  
-                    setTimeout(() => {  
-                        loader.style.display = 'none'; 
-                        speak("System online. Permanent memory restored. Click MIC to talk to me, Sir.");  
-                    }, 800);  
-                }  
-            }, 1200);
-        });
+        setTimeout(() => {  
+            const loader = document.getElementById('loader');  
+            if (loader) {  
+                loader.style.opacity = '0';  
+                setTimeout(() => {  
+                    loader.style.display = 'none'; 
+                    speak("System online. Permanent memory restored. Good day, Sir.");  
+                }, 800);  
+            }  
+        }, 1500);
 
         setInterval(() => {  
             const clock = document.getElementById('clock');  
@@ -772,6 +684,7 @@
             if (loadVal) loadVal.innerText = (15 + Math.floor(Math.random() * 20)) + "%";
         }, 1000);
 
+        /* ENHANCED NATURAL VOICE ENGINE */
         function speak(text) {  
             try {  
                 if (!('speechSynthesis' in window)) return;
@@ -802,26 +715,17 @@
             availableVoices = window.speechSynthesis.getVoices();
         };  
 
-        function closePanel(panelId) { document.getElementById(panelId).style.display = 'none'; }
-        function showPanel(panelSide) { 
-            const p = document.getElementById(panelSide + '-panel');
-            if (p) p.style.display = 'block'; 
+        function closePanel(panelId) {
+            document.getElementById(panelId).style.display = 'none';
         }
 
-        function showCenterCalendar() {
-            const overlay = document.getElementById('center-calendar-overlay');
-            if (overlay) overlay.classList.add('active');
-            speak("Displaying Google Calendar in the center of your screen, Sir.");
-        }
-
-        function hideCenterCalendar() {
-            const overlay = document.getElementById('center-calendar-overlay');
-            if (overlay) overlay.classList.remove('active');
+        function showPanel(panelSide) {
+            const panel = document.getElementById(panelSide + '-panel');
+            if (panel) panel.style.display = 'block';
         }
 
         function saveStateToDisk() {
             localStorage.setItem('jarvis_calendar', JSON.stringify(familyCalendar));
-            localStorage.setItem('jarvis_notes', JSON.stringify(userNotes));
             localStorage.setItem('jarvis_memory', JSON.stringify(jarvisMemory));
         }
 
@@ -829,261 +733,76 @@
             const list = document.getElementById('calendar-list');
             if (!list) return;
             list.innerHTML = '';
-            familyCalendar.forEach((evt) => {
+            familyCalendar.forEach((evt, idx) => {
                 const item = document.createElement('div');
                 item.className = 'calendar-item';
-                item.innerHTML = `<div><div class="event-title">${evt.title}</div><div class="event-date">📅 ${evt.date} ${evt.time ? '🕒 ' + evt.time : ''}</div></div>
-                <div>
-                    <button class="expand-btn" style="padding:2px 5px; color:#ff3366;" onclick="deleteCalendarEvent(${evt.id})">✕</button>
-                </div>`;
+                item.innerHTML = `<div><div class="event-title">${evt.title}</div><div class="event-date">📅 ${evt.date}</div></div>
+                <button class="expand-btn" style="padding:2px 6px; color:#ff3366;" onclick="deleteCalendarEvent(${idx})">✕</button>`;
                 list.appendChild(item);
             });
             saveStateToDisk();
         }
 
-        function deleteCalendarEvent(id) {
-            familyCalendar = familyCalendar.filter(evt => evt.id !== id);
+        function deleteCalendarEvent(index) {
+            familyCalendar.splice(index, 1);
             renderCalendar();
-            speak("Removed event from calendar, Sir.");
+            speak("Removed calendar event, Sir.");
         }
-
-        function renderNotes() {
-            const list = document.getElementById('notes-list');
-            if (!list) return;
-            list.innerHTML = '';
-            userNotes.forEach((note, index) => {
-                const item = document.createElement('div');
-                item.className = 'note-item';
-                item.innerHTML = `<div><div class="note-text">• ${note.text}</div><div class="note-date">🕒 ${note.date}</div></div>
-                <button class="expand-btn" style="padding:2px 5px;" onclick="deleteNote(${index})">✕</button>`;
-                list.appendChild(item);
-            });
-            saveStateToDisk();
-        }
-
-        function addNoteFromUI() {
-            const noteInput = document.getElementById('noteInput');
-            if (!noteInput || !noteInput.value.trim()) return;
-            userNotes.push({ text: noteInput.value.trim(), date: new Date().toLocaleTimeString() });
-            noteInput.value = '';
-            renderNotes();
-            speak("Note saved, Sir.");
-        }
-
-        function deleteNote(index) { userNotes.splice(index, 1); renderNotes(); speak("Note deleted, Sir."); }
 
         function addCalendarEventFromUI() {
             const titleInput = document.getElementById('eventTitle');
             const dateInput = document.getElementById('eventDate');
             if (!titleInput.value) return;
 
-            const title = titleInput.value;
             const dateStr = dateInput.value || new Date().toISOString().split('T')[0];
-            
-            familyCalendar.push({ id: Date.now(), title: title, date: dateStr, time: "12:00" });
+            familyCalendar.push({ title: titleInput.value, date: dateStr });
+            speak(`Added ${titleInput.value} to the family calendar for ${dateStr}.`);
+            titleInput.value = '';
+            dateInput.value = '';
             renderCalendar();
-
-            speak(`Added ${title} to your calendar, Sir.`);
-            titleInput.value = ''; dateInput.value = '';
         }
 
-        /* DRAG AND DROP HANDLERS FOR HUD CARDS */
-        function allowDrop(ev) { ev.preventDefault(); }
-        function dragCard(ev) {
-            ev.dataTransfer.setData("text", ev.target.id);
-            lastDraggedCardId = ev.target.id;
-        }
-        function dropCard(ev, targetContainerId) {
-            ev.preventDefault();
-            const data = ev.dataTransfer.getData("text");
-            const draggedElement = document.getElementById(data);
-            const container = document.getElementById(targetContainerId);
-            if (draggedElement && container) {
-                container.appendChild(draggedElement);
-                speak("Repositioned card element, Sir.");
+        /* HARDENED CALENDAR OPEN CONTROL */
+        function openCalendarView() {
+            showPanel('left');
+            const calSection = document.getElementById('calendar-wrapper');
+            if (calSection) {
+                calSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                calSection.classList.add('highlight');
+                setTimeout(() => calSection.classList.remove('highlight'), 2500);
             }
+            speak("Opening your calendar now, Sir.");
         }
 
-        /* HARDENED RECOGNITION ENGINE (FIXES MUTE & LISTENING) */
-        function setupVoiceRecognition() {
+        /* SPEECH RECOGNITION (MIC COMMANDS) */
+        function startVoice() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
-                const log = document.getElementById('log');
-                if (log) log.innerText = "SYSTEM WARNING: Speech recognition API not supported in this browser. Use Chrome/Edge.";
+                speak("Voice recognition is not supported in this browser, Sir.");
                 return;
             }
-
-            recognition = new SpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = false;
+            
+            const recognition = new SpeechRecognition();
             recognition.lang = 'en-US';
+            recognition.interimResults = false;
 
-            recognition.onstart = () => {
-                isListening = true;
-                const micBtn = document.getElementById('micBtn');
-                const log = document.getElementById('log');
-                if (micBtn) {
-                    micBtn.innerText = "🎙️ MIC: LISTENING...";
-                    micBtn.classList.add('mic-active');
-                }
-                if (log) log.innerText = "SYSTEM: Microphone active. Listening for commands...";
-            };
+            const log = document.getElementById('log');
+            if (log) log.innerText = "SYSTEM: Listening for voice commands...";
 
             recognition.onresult = (event) => {
-                const lastResultIndex = event.results.length - 1;
-                const transcript = event.results[lastResultIndex][0].transcript.trim();
-                
-                const log = document.getElementById('log');
-                if (log) log.innerText = "HEARD: \"" + transcript + "\"";
-
+                const transcript = event.results[0][0].transcript;
                 document.getElementById('userInput').value = transcript;
                 processInput();
             };
 
-            recognition.onerror = (event) => {
-                if (event.error === 'not-allowed') {
-                    speak("Microphone permission denied. Please allow microphone access in your browser.");
-                    isListening = false;
-                    updateMicUI();
-                }
+            recognition.onerror = () => {
+                speak("I lost your voice command, Sir. Please try again.");
             };
 
-            recognition.onend = () => {
-                if (isListening) {
-                    try { recognition.start(); } catch(e) {}
-                } else {
-                    updateMicUI();
-                }
-            };
+            recognition.start();
         }
 
-        function toggleVoiceListening() {
-            if (!recognition) {
-                setupVoiceRecognition();
-                if (!recognition) return;
-            }
-
-            if (isListening) {
-                isListening = false;
-                try { recognition.stop(); } catch(e) {}
-                updateMicUI();
-                speak("Microphone deactivated, Sir.");
-            } else {
-                try {
-                    recognition.start();
-                } catch(e) {
-                    console.log("Recognition start error:", e);
-                }
-            }
-        }
-
-        function updateMicUI() {
-            const micBtn = document.getElementById('micBtn');
-            const log = document.getElementById('log');
-            if (micBtn) {
-                micBtn.innerText = "🎙️ MIC: OFF";
-                micBtn.classList.remove('mic-active');
-            }
-            if (log) log.innerText = "SYSTEM: Standby mode active. Click MIC to enable voice listening.";
-        }
-
-        function displayAbilities() {
-            showPanel('right');
-            const rightContent = document.getElementById('right-content');
-            
-            const abilitiesHTML = `
-                <div class="response-card" id="abilities-card" draggable="true" ondragstart="dragCard(event)">
-                    <div class="card-source">J.A.R.V.I.S. CORE CAPABILITIES</div>
-                    <div class="card-title">System Features & Voice Commands</div>
-                    <div class="ability-list">
-                        <div class="ability-item">
-                            <div class="ability-title">1. NATURAL VOICE TALK-BACK</div>
-                            <div class="ability-desc">Speak naturally via mic; JARVIS answers back directly without live search for greetings.</div>
-                        </div>
-                        <div class="ability-item">
-                            <div class="ability-title">2. CENTER GOOGLE CALENDAR</div>
-                            <div class="ability-desc">"Bring up Google Calendar in the middle of my screen" opens full calendar modal.</div>
-                        </div>
-                        <div class="ability-item">
-                            <div class="ability-title">3. CALENDAR CONTROLS</div>
-                            <div class="ability-desc">"Add [event] to my calendar", "Remove [event]", or "Switch time of [event] to 3 PM".</div>
-                        </div>
-                        <div class="ability-item">
-                            <div class="ability-title">4. INTERACTIVE DRAG & DROP</div>
-                            <div class="ability-desc">Drag response cards onto left panel, center drop zone, or right stack.</div>
-                        </div>
-                        <div class="ability-item">
-                            <div class="ability-title">5. LAYOUT MOVEMENT</div>
-                            <div class="ability-desc">"Move this to the other side of the screen" flips workspace columns dynamically.</div>
-                        </div>
-                        <div class="ability-item">
-                            <div class="ability-title">6. PERMANENT MEMORY & NOTES</div>
-                            <div class="ability-desc">"Remember [x] as [y]" and HUD schematic notes persist across reloads.</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            rightContent.innerHTML = abilitiesHTML;
-            speak("I am equipped with natural voice back-and-forth, center Google Calendar embedding, full event editing, dynamic card drag-and-drop, layout side-swapping, persistent memory, schematic note taking, and live network searching, Sir.");
-        }
-
-        async function fetchLiveNewsAndData(query) {
-            showPanel('right');
-            const rightContent = document.getElementById('right-content');
-            rightContent.innerHTML = '<p style="color:#00f0ff;">Searching live network feeds for: ' + query + '...</p>';
-            
-            try {
-                const newsRssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
-                const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(newsRssUrl)}`;
-                
-                const response = await fetch(apiUrl);
-                const data = await response.json();
-
-                if (data.status === 'ok' && data.items && data.items.length > 0) {
-                    rightContent.innerHTML = '';
-                    data.items.slice(0, 4).forEach((item, idx) => {
-                        const card = document.createElement('div');
-                        const cardId = 'card-' + Date.now() + '-' + idx;
-                        card.className = 'response-card';
-                        card.id = cardId;
-                        card.draggable = true;
-                        card.ondragstart = dragCard;
-
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = item.description || item.content;
-                        const cleanText = tempDiv.innerText.slice(0, 220) + '...';
-
-                        card.innerHTML = `
-                            <div class="card-source">${item.author || data.feed.title || 'LIVE DATA FEED'}</div>
-                            <div class="card-title">${item.title}</div>
-                            <div class="card-snippet">${cleanText}</div>
-                            <div class="card-actions">
-                                <button class="expand-btn" onclick="document.getElementById('${cardId}').classList.toggle('enlarged')">ENLARGE</button>
-                                <a href="${item.link}" target="_blank" class="link-btn">READ MORE ↗</a>
-                            </div>
-                        `;
-                        rightContent.appendChild(card);
-                        lastDraggedCardId = cardId;
-                    });
-
-                    speak(`Pulled live data for ${query}, Sir.`);
-                    return;
-                }
-            } catch (err) {}
-
-            rightContent.innerHTML = `
-                <div class="response-card" id="card-search-fallback" draggable="true" ondragstart="dragCard(event)">
-                    <div class="card-source">SEARCH RESULTS</div>
-                    <div class="card-title">Query: ${query}</div>
-                    <div class="card-snippet">Launch full web inquiry:</div>
-                    <div class="card-actions">
-                        <a href="https://www.google.com/search?q=${encodeURIComponent(query)}" target="_blank" class="link-btn">SEARCH GOOGLE ↗</a>
-                    </div>
-                </div>
-            `;
-            speak(`Generated live web query for ${query}, Sir.`);
-        }
-
+        /* DYNAMIC INTENT PARSER & COMMAND EXECUTION */
         async function processInput() {  
             const inputField = document.getElementById('userInput');
             if (!inputField) return;  
@@ -1091,9 +810,9 @@
             if (!query) return;  
 
             inputField.value = '';  
-            const qLower = query.toLowerCase().replace(/['’]/g, '');
+            const qLower = query.toLowerCase();
 
-            // 1. PERMANENT MEMORY COMMANDS
+            // --- PERMANENT MEMORY COMMANDS ---
             if (qLower.startsWith('remember ') || qLower.startsWith('save ')) {
                 const parts = query.replace(/remember|save/i, '').trim().split(/ as | is /i);
                 if (parts.length >= 2) {
@@ -1114,121 +833,41 @@
                 }
             }
 
-            // 2. CONVERSATIONAL & GREETING CHECK
-            const cleanGreetingQuery = qLower.replace(/[^a-z0-9\s]/gi, '').trim();
-            if (GREETINGS.includes(cleanGreetingQuery)) {
-                const randomGreeting = GREETING_RESPONSES[Math.floor(Math.random() * GREETING_RESPONSES.length)];
-                speak(randomGreeting);
+            // --- FEATURE 1: OPEN / SHOW / VIEW CALENDAR (FIXED FLEXIBLE MATCHING) ---
+            if (qLower.includes('calendar') && (qLower.includes('open') || qLower.includes('show') || qLower.includes('view') || qLower.includes('bring up') || qLower.includes('display') || qLower.includes('look at'))) {
+                openCalendarView();
                 return;
             }
 
-            // 3. SPECIAL ABILITIES COMMAND
-            if (qLower.includes('special abilities') || qLower.includes('what can you do') || qLower.includes('your abilities') || qLower.includes('what are your capabilities')) {
-                displayAbilities();
+            if (qLower === 'calendar' || qLower === 'my calendar' || qLower === 'open calendar') {
+                openCalendarView();
                 return;
             }
 
-            // 4. GOOGLE CALENDAR COMMANDS
-            if (qLower.includes('open calendar') || qLower.includes('show calendar')) {
-                showPanel('left');
-                const calElem = document.getElementById('calendar-list');
-                if (calElem) calElem.scrollIntoView({ behavior: 'smooth' });
-                speak("Opening your calendar now, Sir.");
-                return;
-            }
-
-            if (qLower.includes('google calendar') && (qLower.includes('middle') || qLower.includes('center') || qLower.includes('pop up') || qLower.includes('bring up') || qLower.includes('show'))) {
-                showCenterCalendar();
-                return;
-            }
-
-            if (qLower.includes('close calendar') || qLower.includes('hide calendar')) {
-                hideCenterCalendar();
-                speak("Closing Google Calendar center overlay, Sir.");
-                return;
-            }
-
-            // CALENDAR EDIT INTENTS
-            if (qLower.includes('remove') && qLower.includes('calendar')) {
-                let eventNameToRemove = query.replace(/remove/i, '').replace(/from (my |the )?calendar/i, '').replace(/jarvis/i, '').trim();
-                const match = familyCalendar.find(e => e.title.toLowerCase().includes(eventNameToRemove.toLowerCase()));
-                if (match) {
-                    deleteCalendarEvent(match.id);
-                } else {
-                    speak(`Could not find an event matching ${eventNameToRemove} to remove.`);
-                }
-                return;
-            }
-
-            if ((qLower.includes('switch time') || qLower.includes('change time') || qLower.includes('move time')) && qLower.includes('calendar')) {
-                let eventName = query.replace(/switch the time of|change time of|move time of|switch time/i, '').replace(/to .*/i, '').replace(/jarvis/i, '').trim();
-                let timeMatch = query.match(/(\d{1,2}:\d{2}\s*(?:am|pm)?)/i);
-                let newTime = timeMatch ? timeMatch[0] : "15:00";
-
-                const match = familyCalendar.find(e => e.title.toLowerCase().includes(eventName.toLowerCase()));
-                if (match) {
-                    match.time = newTime;
-                    renderCalendar();
-                    speak(`Switched time of ${match.title} to ${newTime}, Sir.`);
-                } else {
-                    speak(`Could not locate ${eventName} on your calendar, Sir.`);
-                }
-                return;
-            }
-
-            if (qLower.includes('add') && (qLower.includes('calendar') || qLower.includes('event') || qLower.includes('schedule') || qLower.includes('appointment'))) {
-                let cleanTitle = query.replace(/add/i, '').replace(/to (my |the )?calendar/i, '').replace(/schedule/i, '').trim();
-                const today = new Date().toISOString().split('T')[0];
-                const eventName = cleanTitle || "New Event";
-                
-                familyCalendar.push({ id: Date.now(), title: eventName, date: today, time: "12:00" });
-                renderCalendar();
-                showPanel('left');
-
-                speak(`Added ${eventName} to your calendar, Sir.`);
-                return;
-            }
-
-            // 5. APPLE MUSIC
+            // --- FEATURE 2: OPEN APPLE MUSIC ---
             if (qLower.includes('open apple music') || qLower.includes('play apple music')) {
                 speak("Opening Apple Music for you, Sir.");
                 window.open("https://music.apple.com", "_blank");
                 return;
             }
 
-            // 6. MOVE THIS TO THE OTHER SIDE COMMAND
-            if (qLower.includes('move this to the other side') || qLower.includes('move card') || qLower.includes('swap sides') || qLower.includes('switch side')) {
-                if (lastDraggedCardId && document.getElementById(lastDraggedCardId)) {
-                    const cardElem = document.getElementById(lastDraggedCardId);
-                    const leftContent = document.getElementById('left-content');
-                    const rightContent = document.getElementById('right-content');
-
-                    if (cardElem.parentElement.id === 'right-content') {
-                        leftContent.appendChild(cardElem);
-                        showPanel('left');
-                        speak("Moved active card to the left panel, Sir.");
-                    } else {
-                        rightContent.appendChild(cardElem);
-                        showPanel('right');
-                        speak("Moved active card to the right panel, Sir.");
-                    }
+            // --- FEATURE 3: MOVE THIS TO THE OTHER SIDE OF THE SCREEN ---
+            if (qLower.includes('move this to the other side') || qLower.includes('move to the other side') || qLower.includes('swap sides') || qLower.includes('switch side')) {
+                const workspace = document.getElementById('workspace');
+                if (workspace.style.gridTemplateColumns === '380px 1fr 340px') {
+                    workspace.style.gridTemplateColumns = '340px 1fr 380px';
                 } else {
-                    const workspace = document.getElementById('workspace');
-                    if (workspace.style.gridTemplateColumns === '380px 1fr 340px') {
-                        workspace.style.gridTemplateColumns = '340px 1fr 380px';
-                    } else {
-                        workspace.style.gridTemplateColumns = '380px 1fr 340px';
-                    }
-                    speak("Reconfiguring interface layout to the opposite side, Sir.");
+                    workspace.style.gridTemplateColumns = '380px 1fr 340px';
                 }
+                speak("Reconfiguring interface layout to the opposite side, Sir.");
                 return;
             }
 
-            // 7. ENLARGE FEATURE
+            // --- FEATURE 4: ENLARGE SOMETHING ---
             if (qLower.includes('enlarge') || qLower.includes('make bigger') || qLower.includes('make larger')) {
                 if (qLower.includes('arc') || qLower.includes('reactor') || qLower.includes('logo')) {
                     const arc = document.getElementById('arcReactor');
-                    if (arc) arc.style.transform = arc.style.transform === 'scale(1.4)' ? 'scale(1)' : 'scale(1.4)';
+                    arc.style.transform = arc.style.transform === 'scale(1.4)' ? 'scale(1)' : 'scale(1.4)';
                     speak("Enlarging Arc Reactor core, Sir.");
                 } else if (qLower.includes('panel') || qLower.includes('workspace') || qLower.includes('screen')) {
                     document.body.style.transform = document.body.style.transform === 'scale(1.1)' ? 'scale(1)' : 'scale(1.1)';
@@ -1245,7 +884,7 @@
                 return;
             }
 
-            // 8. CLEAR EVERYTHING
+            // --- FEATURE 5: CLEAR EVERYTHING ON THE SCREEN ---
             if (qLower.includes('clear everything') || qLower.includes('clear screen') || qLower.includes('wipe screen')) {
                 document.getElementById('right-content').innerHTML = '<p style="opacity: 0.7;">Screen cleared. Standing by for instructions, Sir.</p>';
                 document.getElementById('log').innerText = "SYSTEM: Interface reset complete.";
@@ -1256,8 +895,26 @@
                 return;
             }
 
-            // DEFAULT LIVE DATA FETCH
-            await fetchLiveNewsAndData(query);
+            // GREETING CHECK
+            if (GREETINGS.includes(qLower.replace(/[^a-z0-9\s]/gi, '').trim())) {
+                const randomGreeting = GREETING_RESPONSES[Math.floor(Math.random() * GREETING_RESPONSES.length)];
+                speak(randomGreeting);
+                return;
+            }
+
+            // CALENDAR ADDING INTENT
+            if (qLower.includes('add') && (qLower.includes('calendar') || qLower.includes('event') || qLower.includes('schedule') || qLower.includes('appointment'))) {
+                let cleanTitle = query.replace(/add/i, '').replace(/to (my |the )?calendar/i, '').replace(/schedule/i, '').trim();
+                const today = new Date().toISOString().split('T')[0];
+                familyCalendar.push({ title: cleanTitle || "New Event", date: today });
+                renderCalendar();
+                openCalendarView();
+                speak(`Added ${cleanTitle || "New Event"} to your calendar, Sir.`);
+                return;
+            }
+
+            // DEFAULT INTENT
+            speak(`Processing command: ${query}`);
         }
     </script>  
 </body>  
