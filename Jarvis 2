@@ -220,9 +220,10 @@
             margin-top: 10px;
             display: flex;
             justify-content: flex-end;
+            gap: 6px;
         }
 
-        .expand-btn {
+        .expand-btn, .link-btn {
             background: rgba(0, 240, 255, 0.2);
             border: 1px solid #00f0ff;
             color: #00f0ff;
@@ -231,16 +232,18 @@
             cursor: pointer;
             border-radius: 3px;
             font-family: 'Orbitron', sans-serif;
+            text-decoration: none;
+            display: inline-block;
         }
 
-        .expand-btn:hover {
+        .expand-btn:hover, .link-btn:hover {
             background: #00f0ff;
             color: #000;
         }
 
         .response-card.enlarged {
             width: 100% !important;
-            transform: scale(1.05);
+            transform: scale(1.02);
             background: rgba(2, 10, 25, 0.95);
             border: 2px solid #00f0ff;
             box-shadow: 0 0 25px rgba(0, 240, 255, 0.6);
@@ -282,6 +285,9 @@
             padding: 8px;
             border-radius: 4px;
             font-size: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .calendar-item .event-title {
@@ -604,34 +610,31 @@
                     <button class="close-btn" onclick="closePanel('right-panel')">✕</button>
                 </div>
                 <div id="right-content">  
-                    <p style="opacity: 0.7;">Greetings, Sir. Type or speak to search news, politics, concerts, animals, or edit calendar...</p>
+                    <p style="opacity: 0.7;">Greetings, Sir. Wake words active. Speak or type commands...</p>
                 </div>  
             </div>  
         </div>  
 
         <div class="terminal-area">  
-            <div id="log" class="log-box">SYSTEM: Standby mode active. Permanent memory persistent.</div>  
+            <div id="log" class="log-box">SYSTEM: Standby mode active. Listening for wake words...</div>  
             <div class="controls">  
-                <input type="text" id="userInput" placeholder="Ask anything or say 'remember my name is Tony'..." onkeydown="if(event.key==='Enter') processInput()">  
+                <input type="text" id="userInput" placeholder="Ask anything or speak wake word..." onkeydown="if(event.key==='Enter') processInput()">  
                 <button onclick="processInput()">SEND</button>  
-                <button onclick="startVoice()">MIC</button>  
+                <button id="micBtn" onclick="toggleVoiceListening()">MIC: ON</button>  
             </div>  
         </div>  
     </div>  
 
     <script>  
         let availableVoices = [];
-        /* 100% PERMANENT MEMORY STORAGE INITIALIZATION */
         let familyCalendar = JSON.parse(localStorage.getItem('jarvis_calendar')) || [
             { title: "Family Game Night", date: "2026-08-07" },
             { title: "Mom's Birthday", date: "2026-08-15" }
         ];
         let jarvisMemory = JSON.parse(localStorage.getItem('jarvis_memory')) || {};
+        let recognition = null;
+        let isListening = false;
 
-        const GREETINGS = [
-            "hey jarvis", "hi jarvis", "hello jarvis", "jarvis", "hey", "hello", 
-            "good morning", "good evening", "good afternoon", "how are you", "whats up", "what's up"
-        ];
         const GREETING_RESPONSES = [
             "Hello Sir, what can I do for you today?",
             "At your service, Sir. What do you need?",
@@ -641,6 +644,7 @@
 
         window.onload = () => {
             renderCalendar();
+            initVoiceRecognition();
         };
 
         setTimeout(() => {  
@@ -649,7 +653,7 @@
                 loader.style.opacity = '0';  
                 setTimeout(() => {  
                     loader.style.display = 'none'; 
-                    speak("System online. Permanent memory restored. Good day, Sir.");  
+                    speak("System online. Permanent memory restored. Wake words activated.");  
                 }, 800);  
             }  
         }, 1500);
@@ -664,7 +668,6 @@
             if (loadVal) loadVal.innerText = (15 + Math.floor(Math.random() * 20)) + "%";
         }, 1000);
 
-        /* ENHANCED NATURAL VOICE ENGINE */
         function speak(text) {  
             try {  
                 if (!('speechSynthesis' in window)) return;
@@ -716,10 +719,17 @@
             familyCalendar.forEach((evt) => {
                 const item = document.createElement('div');
                 item.className = 'calendar-item';
-                item.innerHTML = `<div class="event-title">${evt.title}</div><div class="event-date">📅 ${evt.date}</div>`;
+                item.innerHTML = `<div><div class="event-title">${evt.title}</div><div class="event-date">📅 ${evt.date}</div></div>
+                <button class="expand-btn" style="padding:2px 5px;" onclick="syncToGoogleCalendar('${encodeURIComponent(evt.title)}', '${evt.date}')">Sync</button>`;
                 list.appendChild(item);
             });
             saveStateToDisk();
+        }
+
+        function syncToGoogleCalendar(title, dateStr) {
+            const cleanDate = dateStr.replace(/-/g, '');
+            const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${cleanDate}/${cleanDate}`;
+            window.open(gCalUrl, '_blank');
         }
 
         function addCalendarEventFromUI() {
@@ -727,42 +737,145 @@
             const dateInput = document.getElementById('eventDate');
             if (!titleInput.value) return;
 
+            const title = titleInput.value;
             const dateStr = dateInput.value || new Date().toISOString().split('T')[0];
-            familyCalendar.push({ title: titleInput.value, date: dateStr });
-            speak(`Added ${titleInput.value} to Google Calendar sync for ${dateStr}.`);
+            
+            familyCalendar.push({ title: title, date: dateStr });
+            renderCalendar();
+
+            speak(`Added ${title} to your calendar and opening Google Calendar event sync, Sir.`);
+            syncToGoogleCalendar(encodeURIComponent(title), dateStr);
+
             titleInput.value = '';
             dateInput.value = '';
-            renderCalendar();
         }
 
-        /* SPEECH RECOGNITION (MIC COMMANDS) */
-        function startVoice() {
+        /* CONTINUOUS VOICE & WAKE WORD RECOGNITION ENGINE */
+        function initVoiceRecognition() {
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                speak("Voice recognition is not supported in this browser, Sir.");
+                console.log("Speech recognition not supported in browser.");
                 return;
             }
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'en-US';
-            recognition.interimResults = false;
 
-            const log = document.getElementById('log');
-            if (log) log.innerText = "SYSTEM: Listening for voice commands...";
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
 
             recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
+                const lastResultIndex = event.results.length - 1;
+                const transcript = event.results[lastResultIndex][0].transcript.trim();
                 document.getElementById('userInput').value = transcript;
                 processInput();
             };
 
             recognition.onerror = () => {
-                speak("I lost your voice command, Sir. Please try again.");
+                if (isListening) setTimeout(() => recognition.start(), 1000);
             };
 
-            recognition.start();
+            recognition.onend = () => {
+                if (isListening) recognition.start();
+            };
+
+            toggleVoiceListening(true);
         }
 
-        /* DYNAMIC INTENT PARSER & COMMAND EXECUTION */
+        function toggleVoiceListening(forceStart = false) {
+            if (!recognition) return;
+            const micBtn = document.getElementById('micBtn');
+
+            if (isListening && !forceStart) {
+                isListening = false;
+                recognition.stop();
+                if (micBtn) micBtn.innerText = "MIC: OFF";
+                speak("Voice recognition disabled.");
+            } else {
+                isListening = true;
+                try { recognition.start(); } catch(e) {}
+                if (micBtn) micBtn.innerText = "MIC: LISTENING";
+            }
+        }
+
+        /* LIVE NEWS & SEARCH FETCH ENGINE */
+        async function fetchLiveNewsAndData(query) {
+            showPanel('right');
+            const rightContent = document.getElementById('right-content');
+            rightContent.innerHTML = '<p style="color:#00f0ff;">Searching global networks for: ' + query + '...</p>';
+            
+            try {
+                const newsRssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
+                const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(newsRssUrl)}`;
+                
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                if (data.status === 'ok' && data.items && data.items.length > 0) {
+                    rightContent.innerHTML = '';
+                    const items = data.items.slice(0, 5);
+
+                    items.forEach((item) => {
+                        const card = document.createElement('div');
+                        card.className = 'response-card';
+                        
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = item.description || item.content;
+                        const cleanText = tempDiv.innerText.slice(0, 220) + '...';
+
+                        card.innerHTML = `
+                            <div class="card-source">${item.author || data.feed.title || 'LIVE DATA FEED'}</div>
+                            <div class="card-title">${item.title}</div>
+                            <div class="card-snippet">${cleanText}</div>
+                            <div class="card-actions">
+                                <button class="expand-btn" onclick="this.closest('.response-card').classList.toggle('enlarged')">ENLARGE</button>
+                                <a href="${item.link}" target="_blank" class="link-btn">READ MORE ↗</a>
+                            </div>
+                        `;
+                        rightContent.appendChild(card);
+                    });
+
+                    const topSummary = items[0].title;
+                    speak(`Found current updates on ${query}, Sir. Top item: ${topSummary}`);
+                    return;
+                }
+            } catch (err) {}
+
+            try {
+                const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+                const wikiRes = await fetch(wikiUrl);
+                
+                if (wikiRes.ok) {
+                    const wikiData = await wikiRes.json();
+                    if (wikiData.extract) {
+                        rightContent.innerHTML = `
+                            <div class="response-card enlarged">
+                                <div class="card-source">WIKIPEDIA DATABASE</div>
+                                <div class="card-title">${wikiData.title}</div>
+                                <div class="card-snippet">${wikiData.extract}</div>
+                                <div class="card-actions">
+                                    <a href="${wikiData.content_urls.desktop.page}" target="_blank" class="link-btn">FULL ARTICLE ↗</a>
+                                </div>
+                            </div>
+                        `;
+                        speak(wikiData.extract.slice(0, 180) + "...");
+                        return;
+                    }
+                }
+            } catch (e) {}
+
+            rightContent.innerHTML = `
+                <div class="response-card">
+                    <div class="card-source">GLOBAL SEARCH</div>
+                    <div class="card-title">Query: ${query}</div>
+                    <div class="card-snippet">Unable to pull live feed preview directly. You can launch full web results below:</div>
+                    <div class="card-actions">
+                        <a href="https://www.google.com/search?q=${encodeURIComponent(query)}" target="_blank" class="link-btn">SEARCH GOOGLE ↗</a>
+                    </div>
+                </div>
+            `;
+            speak(`I generated live search queries for ${query}, Sir.`);
+        }
+
         async function processInput() {  
             const inputField = document.getElementById('userInput');
             if (!inputField) return;  
@@ -770,7 +883,42 @@
             if (!query) return;  
 
             inputField.value = '';  
-            const qLower = query.toLowerCase();
+            const qLower = query.toLowerCase().replace(/['’]/g, '');
+
+            // ==========================================
+            // WAKE WORDS INTEGRATION (3 EXACT PHRASES)
+            // ==========================================
+
+            // 1. WAKE WORD 1: "Wake up daddys home"
+            if (qLower.includes('wake up daddys home') || qLower.includes('wake up daddy home')) {
+                speak("Welcome back, Sir. All systems operational and standing by.");
+                const arc = document.getElementById('arcReactor');
+                if (arc) arc.style.transform = 'scale(1.2)';
+                setTimeout(() => { if (arc) arc.style.transform = 'scale(1)'; }, 1500);
+                return;
+            }
+
+            // 2. WAKE WORD 2: "Hey jarvis" / "Hi jarvis" / "Hello jarvis"
+            if (qLower === 'hey jarvis' || qLower === 'hi jarvis' || qLower === 'hello jarvis') {
+                const randomGreeting = GREETING_RESPONSES[Math.floor(Math.random() * GREETING_RESPONSES.length)];
+                speak(randomGreeting);
+                return;
+            }
+
+            // 3. WAKE WORD 3: "Good morning jarvis tell me what weve got on the calander today"
+            if (qLower.includes('good morning jarvis') || qLower.includes('what weve got on the calendar') || qLower.includes('what we got on the calendar') || qLower.includes('tell me what weve got on the calendar today')) {
+                showPanel('left');
+                const calElem = document.getElementById('calendar-list');
+                if (calElem) calElem.scrollIntoView({ behavior: 'smooth' });
+
+                if (familyCalendar.length === 0) {
+                    speak("Good morning, Sir. Your calendar is completely clear for today.");
+                } else {
+                    let summary = familyCalendar.map(evt => `${evt.title} on ${evt.date}`).join(', ');
+                    speak(`Good morning, Sir. Here is what is on your calendar today: ${summary}`);
+                }
+                return;
+            }
 
             // --- PERMANENT MEMORY COMMANDS ---
             if (qLower.startsWith('remember ') || qLower.startsWith('save ')) {
@@ -793,7 +941,7 @@
                 }
             }
 
-            // --- FEATURE 1: OPEN GOOGLE CALENDAR ---
+            // --- GOOGLE CALENDAR COMMANDS ---
             if (qLower.includes('open calendar') || qLower.includes('open calander') || qLower.includes('show calendar') || qLower.includes('open google calendar')) {
                 showPanel('left');
                 const calElem = document.getElementById('calendar-list');
@@ -803,7 +951,19 @@
                 return;
             }
 
-            // --- FEATURE 2: MOVE THIS TO THE OTHER SIDE OF THE SCREEN ---
+            // --- ADD EVENT VIA VOICE / PROMPT ---
+            if (qLower.includes('add') && (qLower.includes('calendar') || qLower.includes('event') || qLower.includes('schedule') || qLower.includes('appointment'))) {
+                let cleanTitle = query.replace(/add/i, '').replace(/to (my |the )?(google )?calendar/i, '').replace(/schedule/i, '').trim();
+                const today = new Date().toISOString().split('T')[0];
+                familyCalendar.push({ title: cleanTitle || "New Event", date: today });
+                renderCalendar();
+                showPanel('left');
+                speak(`Added ${cleanTitle || "New Event"} to your Google Calendar list, Sir.`);
+                syncToGoogleCalendar(encodeURIComponent(cleanTitle || "New Event"), today);
+                return;
+            }
+
+            // --- INTERFACE CONTROL COMMANDS ---
             if (qLower.includes('move this to the other side') || qLower.includes('move to the other side') || qLower.includes('swap sides') || qLower.includes('switch side')) {
                 const workspace = document.getElementById('workspace');
                 if (workspace.style.gridTemplateColumns === '380px 1fr 340px') {
@@ -815,7 +975,6 @@
                 return;
             }
 
-            // --- FEATURE 3: ENLARGE SOMETHING ---
             if (qLower.includes('enlarge') || qLower.includes('make bigger') || qLower.includes('make larger')) {
                 if (qLower.includes('arc') || qLower.includes('reactor') || qLower.includes('logo')) {
                     const arc = document.getElementById('arcReactor');
@@ -836,7 +995,6 @@
                 return;
             }
 
-            // --- FEATURE 4: CLEAR EVERYTHING ON THE SCREEN ---
             if (qLower.includes('clear everything') || qLower.includes('clear screen') || qLower.includes('wipe screen')) {
                 document.getElementById('right-content').innerHTML = '<p style="opacity: 0.7;">Screen cleared. Standing by for instructions, Sir.</p>';
                 document.getElementById('log').innerText = "SYSTEM: Interface reset complete.";
@@ -847,26 +1005,8 @@
                 return;
             }
 
-            // GREETING CHECK
-            if (GREETINGS.includes(qLower.replace(/[^a-z0-9\s]/gi, '').trim())) {
-                const randomGreeting = GREETING_RESPONSES[Math.floor(Math.random() * GREETING_RESPONSES.length)];
-                speak(randomGreeting);
-                return;
-            }
-
-            // CALENDAR ADDING INTENT
-            if (qLower.includes('add') && (qLower.includes('calendar') || qLower.includes('event') || qLower.includes('schedule') || qLower.includes('appointment'))) {
-                let cleanTitle = query.replace(/add/i, '').replace(/to (my |the )?calendar/i, '').replace(/schedule/i, '').trim();
-                const today = new Date().toISOString().split('T')[0];
-                familyCalendar.push({ title: cleanTitle || "New Event", date: today });
-                renderCalendar();
-                showPanel('left');
-                speak(`Added ${cleanTitle || "New Event"} to your Google Calendar list, Sir.`);
-                return;
-            }
-
-            // DEFAULT INTENT
-            speak(`Processing command: ${query}`);
+            // LIVE SEARCH & NEWS FOR SPORTS, POLITICS, SCIENCE, GENERAL QUERIES
+            await fetchLiveNewsAndData(query);
         }
     </script>  
 </body>  
