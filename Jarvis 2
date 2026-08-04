@@ -3,7 +3,7 @@
 <head>  
     <meta charset="UTF-8">  
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
-    <title>J.A.R.V.I.S. Core Interface v7.0</title>  
+    <title>J.A.R.V.I.S. Core Operating System v8.0</title>  
     <style>  
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
         * {  
@@ -258,12 +258,12 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) scale(0.9);
-            width: 75%;
-            height: 80%;
-            background: rgba(2, 8, 20, 0.96);
+            width: 80%;
+            height: 82%;
+            background: rgba(2, 8, 20, 0.97);
             border: 2px solid #00f0ff;
             border-radius: 12px;
-            box-shadow: 0 0 35px rgba(0, 240, 255, 0.6);
+            box-shadow: 0 0 40px rgba(0, 240, 255, 0.7);
             z-index: 100;
             display: none;
             flex-direction: column;
@@ -551,6 +551,32 @@
             color: #000;  
         }  
 
+        .ability-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .ability-item {
+            background: rgba(0, 240, 255, 0.1);
+            border-left: 3px solid #00f0ff;
+            padding: 8px;
+            border-radius: 3px;
+        }
+
+        .ability-title {
+            font-weight: bold;
+            color: #ffffff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+        }
+
+        .ability-desc {
+            font-size: 0.78rem;
+            color: #a2f2ff;
+        }
+
         @keyframes spin { 100% { transform: rotate(360deg); } }  
         @keyframes spin-reverse { 100% { transform: rotate(-360deg); } }  
         @keyframes pulse { 0%, 100% { opacity: 0.7; transform: scale(0.98); } 50% { opacity: 1; transform: scale(1.02); } }  
@@ -560,12 +586,12 @@
 
     <div id="loader">  
         <div class="loader-ring"></div>  
-        <div class="loader-text">INITIALIZING STARK HUD v7.0...</div>  
+        <div class="loader-text">INITIALIZING STARK HUD v8.0...</div>  
     </div>  
 
     <div id="hud-container">  
         <header>  
-            <div class="system-title">J.A.R.V.I.S.</div>  
+            <div class="system-title">J.A.R.V.I.S. SYSTEM OS</div>  
             <div id="clock">00:00:00</div>  
         </header>  
 
@@ -586,16 +612,13 @@
                     </div>
                     <div id="notes-list" class="notes-list"></div>
 
-                    <div style="margin-top: 18px; border-bottom: 1px solid rgba(0, 240, 255, 0.3); padding-bottom: 4px; font-weight: bold;">GOOGLE CALENDAR SYNC</div>
+                    <div style="margin-top: 18px; border-bottom: 1px solid rgba(0, 240, 255, 0.3); padding-bottom: 4px; font-weight: bold;">GOOGLE CALENDAR MANAGER</div>
                     <div class="cal-input-group">
                         <input type="text" id="eventTitle" placeholder="Event Description...">
                         <input type="date" id="eventDate">
-                        <button onclick="addCalendarEventFromUI()">ADD EVENT</button>
+                        <button onclick="addCalendarEventFromUI()">ADD TO CALENDAR</button>
                     </div>
                     <div id="calendar-list" class="calendar-list"></div>
-
-                    <div style="margin-top: 18px; border-bottom: 1px solid rgba(0, 240, 255, 0.3); padding-bottom: 4px; font-weight: bold;">SAVED FAVORITE WEBSITES</div>
-                    <div id="favorite-websites-grid" class="site-links-grid" style="margin-top:6px;"></div>
 
                     <div style="margin-top: 18px; border-bottom: 1px solid rgba(0, 240, 255, 0.3); padding-bottom: 4px; font-weight: bold;">DATABASE & SOURCES</div>
                     <div class="site-category">1. SPORTS</div>
@@ -639,7 +662,7 @@
         <div class="terminal-area">  
             <div id="log" class="log-box">SYSTEM: Standby mode active. Listening for commands...</div>  
             <div class="controls">  
-                <input type="text" id="userInput" placeholder="Ask anything, say 'bring up Google Calendar in the middle', 'add this to my calendar'..." onkeydown="if(event.key==='Enter') processInput()">  
+                <input type="text" id="userInput" placeholder="Ask anything, say 'Jarvis what are your special abilities', 'bring up Google Calendar in the middle'..." onkeydown="if(event.key==='Enter') processInput()">  
                 <button onclick="processInput()">SEND</button>  
                 <button id="micBtn" onclick="toggleVoiceListening()">MIC: ON</button>  
             </div>  
@@ -648,7 +671,7 @@
 
     <div id="center-calendar-overlay">
         <div class="overlay-header">
-            <div class="overlay-title">GOOGLE CALENDAR // HUD CENTER VIEW</div>
+            <div class="overlay-title">GOOGLE CALENDAR // HUD CENTER OVERLAY</div>
             <button class="close-btn" onclick="hideCenterCalendar()" style="font-size:1.2rem;">✕ CLOSE</button>
         </div>
         <iframe class="calendar-frame" src="https://calendar.google.com/calendar/embed?src=en.usa%23holiday%40group.v.calendar.google.com&ctz=America%2FNew_York"></iframe>
@@ -662,18 +685,24 @@
         ];
         let userNotes = JSON.parse(localStorage.getItem('jarvis_notes')) || [];
         let jarvisMemory = JSON.parse(localStorage.getItem('jarvis_memory')) || {};
-        let favoriteWebsites = JSON.parse(localStorage.getItem('jarvis_favorites')) || [
-            { name: "Google Calendar", url: "https://calendar.google.com" },
-            { name: "YouTube", url: "https://www.youtube.com" }
-        ];
         let recognition = null;
         let isListening = false;
         let lastDraggedCardId = null;
 
+        const GREETINGS = [
+            "hey jarvis", "hi jarvis", "hello jarvis", "jarvis", "hey", "hello", 
+            "good morning", "good evening", "good afternoon", "how are you", "whats up", "what's up"
+        ];
+        const GREETING_RESPONSES = [
+            "Hello Sir, what can I do for you today?",
+            "At your service, Sir. What do you need?",
+            "Always a pleasure, Sir. How can I help?",
+            "Online and fully operational, Sir."
+        ];
+
         window.onload = () => {
             renderCalendar();
             renderNotes();
-            renderFavorites();
             initVoiceRecognition();
         };
 
@@ -745,7 +774,6 @@
             localStorage.setItem('jarvis_calendar', JSON.stringify(familyCalendar));
             localStorage.setItem('jarvis_notes', JSON.stringify(userNotes));
             localStorage.setItem('jarvis_memory', JSON.stringify(jarvisMemory));
-            localStorage.setItem('jarvis_favorites', JSON.stringify(favoriteWebsites));
         }
 
         function renderCalendar() {
@@ -785,22 +813,16 @@
             saveStateToDisk();
         }
 
-        function deleteNote(index) { userNotes.splice(index, 1); renderNotes(); speak("Note deleted, Sir."); }
-
-        function renderFavorites() {
-            const grid = document.getElementById('favorite-websites-grid');
-            if (!grid) return;
-            grid.innerHTML = '';
-            favoriteWebsites.forEach((site) => {
-                const a = document.createElement('a');
-                a.href = site.url;
-                a.target = '_blank';
-                a.className = 'site-link';
-                a.innerHTML = `<span>★ ${site.name}</span> ↗`;
-                grid.appendChild(a);
-            });
-            saveStateToDisk();
+        function addNoteFromUI() {
+            const noteInput = document.getElementById('noteInput');
+            if (!noteInput || !noteInput.value.trim()) return;
+            userNotes.push({ text: noteInput.value.trim(), date: new Date().toLocaleTimeString() });
+            noteInput.value = '';
+            renderNotes();
+            speak("Note saved, Sir.");
         }
+
+        function deleteNote(index) { userNotes.splice(index, 1); renderNotes(); speak("Note deleted, Sir."); }
 
         function syncToGoogleCalendar(title, dateStr) {
             const cleanDate = dateStr.replace(/-/g, '');
@@ -880,6 +902,46 @@
             }
         }
 
+        function displayAbilities() {
+            showPanel('right');
+            const rightContent = document.getElementById('right-content');
+            
+            const abilitiesHTML = `
+                <div class="response-card" id="abilities-card" draggable="true" ondragstart="dragCard(event)">
+                    <div class="card-source">J.A.R.V.I.S. CORE CAPABILITIES</div>
+                    <div class="card-title">System Features & Voice Commands</div>
+                    <div class="ability-list">
+                        <div class="ability-item">
+                            <div class="ability-title">1. CENTER GOOGLE CALENDAR</div>
+                            <div class="ability-desc">"Bring up Google Calendar in the middle of my screen" opens interactive calendar modal.</div>
+                        </div>
+                        <div class="ability-item">
+                            <div class="ability-title">2. CALENDAR CONTROLS</div>
+                            <div class="ability-desc">"Add [event] to my calendar", "Remove [event] from calendar", or "Switch time of [event] to 3 PM".</div>
+                        </div>
+                        <div class="ability-item">
+                            <div class="ability-title">3. INTERACTIVE DRAG & DROP</div>
+                            <div class="ability-desc">Drag any result card across left panel, center zone, or right stack.</div>
+                        </div>
+                        <div class="ability-item">
+                            <div class="ability-title">4. LAYOUT MOVEMENT</div>
+                            <div class="ability-desc">"Move this to the other side of the screen" shifts active elements across panels.</div>
+                        </div>
+                        <div class="ability-item">
+                            <div class="ability-title">5. PERMANENT MEMORY & NOTES</div>
+                            <div class="ability-desc">"Remember [x] is [y]" and quick HUD schematic notes.</div>
+                        </div>
+                        <div class="ability-item">
+                            <div class="ability-title">6. LIVE NEWS & WEB DATA</div>
+                            <div class="ability-desc">Ask real-time questions to fetch dynamic web cards and RSS news feeds.</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            rightContent.innerHTML = abilitiesHTML;
+            speak("I am equipped with center Google Calendar embedding, full event editing, dynamic card drag-and-drop, layout side-swapping, persistent memory, schematic note taking, and live network searching, Sir.");
+        }
+
         async function fetchLiveNewsAndData(query) {
             showPanel('right');
             const rightContent = document.getElementById('right-content');
@@ -947,9 +1009,27 @@
             const qLower = query.toLowerCase().replace(/['’]/g, '');
 
             // ------------------------------------------
-            // 1. CENTER GOOGLE CALENDAR COMMANDS
+            // 1. CONVERSATIONAL & GREETING CHECK (PREVENTS LIVE NEWS SEARCH FOR "HEY JARVIS")
             // ------------------------------------------
-            if (qLower.includes('google calendar') && (qLower.includes('middle') || qLower.includes('center') || qLower.includes('pop up') || qLower.includes('bring up'))) {
+            const cleanGreetingQuery = qLower.replace(/[^a-z0-9\s]/gi, '').trim();
+            if (GREETINGS.includes(cleanGreetingQuery)) {
+                const randomGreeting = GREETING_RESPONSES[Math.floor(Math.random() * GREETING_RESPONSES.length)];
+                speak(randomGreeting);
+                return;
+            }
+
+            // ------------------------------------------
+            // 2. SPECIAL ABILITIES COMMAND
+            // ------------------------------------------
+            if (qLower.includes('special abilities') || qLower.includes('what can you do') || qLower.includes('your abilities') || qLower.includes('what are your capabilities')) {
+                displayAbilities();
+                return;
+            }
+
+            // ------------------------------------------
+            // 3. CENTER GOOGLE CALENDAR COMMANDS
+            // ------------------------------------------
+            if (qLower.includes('google calendar') && (qLower.includes('middle') || qLower.includes('center') || qLower.includes('pop up') || qLower.includes('bring up') || qLower.includes('show'))) {
                 showCenterCalendar();
                 return;
             }
@@ -1003,7 +1083,7 @@
             }
 
             // ------------------------------------------
-            // 2. MOVE THIS TO THE OTHER SIDE COMMAND
+            // 4. MOVE THIS TO THE OTHER SIDE COMMAND
             // ------------------------------------------
             if (qLower.includes('move this to the other side') || qLower.includes('move card') || qLower.includes('swap sides')) {
                 if (lastDraggedCardId && document.getElementById(lastDraggedCardId)) {
@@ -1032,7 +1112,28 @@
                 return;
             }
 
-            // DEFAULT LIVE DATA FETCH
+            // ------------------------------------------
+            // 5. PERMANENT MEMORY & SYSTEM COMMANDS
+            // ------------------------------------------
+            if (qLower.startsWith('remember ') || qLower.startsWith('save ')) {
+                const parts = query.replace(/remember|save/i, '').trim().split(/ as | is /i);
+                if (parts.length >= 2) {
+                    const key = parts[0].trim().toLowerCase();
+                    const value = parts[1].trim();
+                    jarvisMemory[key] = value;
+                    saveStateToDisk();
+                    speak(`Saved to permanent memory. ${key} is set to ${value}.`);
+                    return;
+                }
+            }
+
+            if (qLower.includes('clear screen') || qLower.includes('wipe screen') || qLower.includes('clear everything')) {
+                document.getElementById('right-content').innerHTML = '<p style="opacity: 0.7;">Screen cleared. Standing by for instructions, Sir.</p>';
+                speak("All screen elements have been cleared, Sir.");
+                return;
+            }
+
+            // DEFAULT LIVE DATA FETCH FOR REAL QUESTIONS
             await fetchLiveNewsAndData(query);
         }
     </script>  
