@@ -5,40 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
     <title>J.A.R.V.I.S. Core Interface v6.0</title>  
     <style>  
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');  
-
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
         * {  
             box-sizing: border-box;  
-            margin: 0;  
+            margin: 0;
             padding: 0;  
             user-select: none;  
         }  
 
         html, body {  
-            width: 100%;  
+            width: 100%;
             height: 100%;  
             background-color: #02060e;  
             color: #00f0ff;  
             font-family: 'Share Tech Mono', monospace;  
             overflow: hidden;  
             display: flex;  
-            flex-direction: column;  
+            flex-direction: column;
             transition: transform 0.4s ease;
         }  
 
         /* CRT Overlay Filter */
         body::before {  
-            content: " ";  
+            content: " ";
             position: absolute;  
             inset: 0;  
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));  
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
             z-index: 10;  
             background-size: 100% 3px, 6px 100%;  
             pointer-events: none;  
         }  
 
         #loader {  
-            position: fixed;  
+            position: fixed;
             inset: 0;  
             background-color: #02060e;  
             display: flex;  
@@ -46,59 +45,59 @@
             justify-content: center;  
             align-items: center;  
             z-index: 999;  
-            transition: opacity 0.8s ease;  
+            transition: opacity 0.8s ease;
         }  
 
         .loader-ring {  
-            width: 100px;  
+            width: 100px;
             height: 100px;  
             border: 3px solid transparent;  
             border-top: 3px solid #00f0ff;  
             border-bottom: 3px solid #00f0ff;
-            border-radius: 50%;  
+            border-radius: 50%;
             animation: spin 1s linear infinite;  
-            box-shadow: 0 0 20px #00f0ff;  
+            box-shadow: 0 0 20px #00f0ff;
         }  
 
         .loader-text {  
-            margin-top: 25px;  
+            margin-top: 25px;
             font-family: 'Orbitron', sans-serif;  
             font-size: 0.9rem;  
             letter-spacing: 3px;  
             color: #00f0ff;
             text-shadow: 0 0 10px #00f0ff;  
-            animation: pulse 1.5s infinite;  
+            animation: pulse 1.5s infinite;
         }  
 
         #hud-container {  
-            flex: 1;  
+            flex: 1;
             width: 100vw;  
             height: 100vh;  
             border: 1px solid rgba(0, 240, 255, 0.3);  
-            box-shadow: inset 0 0 30px rgba(0, 240, 255, 0.1);  
+            box-shadow: inset 0 0 30px rgba(0, 240, 255, 0.1);
             background: radial-gradient(circle at center, rgba(4, 20, 45, 0.8) 0%, rgba(2, 6, 14, 0.95) 100%);  
             display: flex;  
             flex-direction: column;  
-            padding: 15px;  
+            padding: 15px;
             gap: 12px;  
             position: relative;
         }  
 
         header {  
-            display: flex;  
+            display: flex;
             justify-content: space-between;  
             align-items: center;  
             border-bottom: 1px solid rgba(0, 240, 255, 0.4);  
             padding-bottom: 8px;  
-            height: 40px;  
+            height: 40px;
         }  
 
         .system-title {  
-            font-family: 'Orbitron', sans-serif;  
+            font-family: 'Orbitron', sans-serif;
             font-weight: 900;
             font-size: 1.2rem;  
             letter-spacing: 3px;  
-            text-shadow: 0 0 12px #00f0ff;  
+            text-shadow: 0 0 12px #00f0ff;
         }  
 
         #clock {
@@ -109,7 +108,7 @@
         }
 
         .workspace {  
-            flex: 1;  
+            flex: 1;
             display: grid;  
             grid-template-columns: 340px 1fr 380px;  
             gap: 15px;  
@@ -120,13 +119,13 @@
         }  
 
         .hud-panel {  
-            background: rgba(0, 240, 255, 0.04);  
+            background: rgba(0, 240, 255, 0.04);
             border: 1px solid rgba(0, 240, 255, 0.6);  
             padding: 15px;  
-            border-radius: 8px;  
+            border-radius: 8px;
             box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), inset 0 0 15px rgba(0, 240, 255, 0.05);  
             height: 100%;  
-            overflow-y: auto;  
+            overflow-y: auto;
             display: block;  
             font-size: 0.85rem;  
             line-height: 1.5;  
@@ -141,11 +140,11 @@
             align-items: center;
             border-bottom: 1px solid rgba(0, 240, 255, 0.4);  
             margin-bottom: 12px;  
-            padding-bottom: 6px;  
+            padding-bottom: 6px;
         }
 
         .hud-panel h3 {  
-            font-family: 'Orbitron', sans-serif;  
+            font-family: 'Orbitron', sans-serif;
             font-size: 0.95rem;  
             color: #ffffff;  
             text-shadow: 0 0 8px #00f0ff;  
@@ -347,7 +346,7 @@
 
         /* ARC REACTOR LOGO DESIGN */  
         .logo-container {  
-            display: flex;  
+            display: flex;
             justify-content: center;  
             align-items: center;  
             grid-column: 2;  
@@ -436,20 +435,20 @@
         }
 
         .terminal-area {  
-            display: flex;  
+            display: flex;
             flex-direction: column;  
             gap: 8px;  
             height: 110px;  
         }  
 
         .log-box {  
-            flex: 1;  
+            flex: 1;
             overflow-y: auto;  
             color: #7df9ff;  
             font-size: 0.85rem;  
             text-shadow: 0 0 5px #00f0ff;  
             background: rgba(0, 0, 0, 0.5);  
-            padding: 8px 12px;  
+            padding: 8px 12px;
             border-radius: 4px;  
             border: 1px solid rgba(0, 240, 255, 0.3);  
             display: flex;
@@ -457,17 +456,17 @@
         }  
 
         .controls {  
-            display: flex;  
+            display: flex;
             gap: 10px;  
         }  
 
         input[type="text"], input[type="date"] {  
-            flex: 1;  
+            flex: 1;
             background: rgba(0, 240, 255, 0.08);  
             border: 1px solid #00f0ff;  
             color: #00f0ff;  
             padding: 10px 14px;  
-            font-family: 'Share Tech Mono', monospace;  
+            font-family: 'Share Tech Mono', monospace;
             font-size: 0.95rem;  
             outline: none;  
             border-radius: 4px;  
@@ -479,7 +478,7 @@
         }
 
         button {  
-            background: rgba(0, 240, 255, 0.2);  
+            background: rgba(0, 240, 255, 0.2);
             border: 1px solid #00f0ff;  
             color: #00f0ff;  
             padding: 10px 18px;  
@@ -487,7 +486,7 @@
             font-family: 'Orbitron', sans-serif;  
             font-weight: bold;
             font-size: 0.8rem;  
-            border-radius: 4px;  
+            border-radius: 4px;
             transition: all 0.2s;  
             letter-spacing: 1px;
             box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
@@ -499,7 +498,7 @@
         }
 
         button:active {  
-            background: #00f0ff;  
+            background: #00f0ff;
             color: #000;  
         }  
 
@@ -530,8 +529,8 @@
                 <div id="left-content">  
                     <div class="vital-row"><span>CPU TEMP:</span> <span id="val-temp" class="vital-value">42°C</span></div>
                     <div class="vital-row"><span>CORE LOAD:</span> <span id="val-load" class="vital-value">18%</span></div>
-                    
-                    <div style="margin-top: 15px; border-bottom: 1px solid rgba(0, 240, 255, 0.3); padding-bottom: 4px; font-weight: bold;">FAMILY CALENDAR</div>
+     
+                    <div style="margin-top: 15px; border-bottom: 1px solid rgba(0, 240, 255, 0.3); padding-bottom: 4px; font-weight: bold;">GOOGLE CALENDAR SYNC</div>
                     <div class="cal-input-group">
                         <input type="text" id="eventTitle" placeholder="Event Description...">
                         <input type="date" id="eventDate">
@@ -621,21 +620,18 @@
     </div>  
 
     <script>  
-        let availableVoices = [];  
-        
+        let availableVoices = [];
         /* 100% PERMANENT MEMORY STORAGE INITIALIZATION */
         let familyCalendar = JSON.parse(localStorage.getItem('jarvis_calendar')) || [
             { title: "Family Game Night", date: "2026-08-07" },
             { title: "Mom's Birthday", date: "2026-08-15" }
         ];
-
         let jarvisMemory = JSON.parse(localStorage.getItem('jarvis_memory')) || {};
 
         const GREETINGS = [
             "hey jarvis", "hi jarvis", "hello jarvis", "jarvis", "hey", "hello", 
             "good morning", "good evening", "good afternoon", "how are you", "whats up", "what's up"
         ];
-
         const GREETING_RESPONSES = [
             "Hello Sir, what can I do for you today?",
             "At your service, Sir. What do you need?",
@@ -652,11 +648,11 @@
             if (loader) {  
                 loader.style.opacity = '0';  
                 setTimeout(() => {  
-                    loader.style.display = 'none';  
+                    loader.style.display = 'none'; 
                     speak("System online. Permanent memory restored. Good day, Sir.");  
                 }, 800);  
             }  
-        }, 1500);  
+        }, 1500);
 
         setInterval(() => {  
             const clock = document.getElementById('clock');  
@@ -666,20 +662,19 @@
             const loadVal = document.getElementById('val-load');
             if (tempVal) tempVal.innerText = (40 + Math.floor(Math.random() * 5)) + "°C";
             if (loadVal) loadVal.innerText = (15 + Math.floor(Math.random() * 20)) + "%";
-        }, 1000);  
+        }, 1000);
 
         /* ENHANCED NATURAL VOICE ENGINE */
         function speak(text) {  
             try {  
-                if (!('speechSynthesis' in window)) return;  
+                if (!('speechSynthesis' in window)) return;
                 window.speechSynthesis.cancel();  
 
                 const utterance = new SpeechSynthesisUtterance(text);  
                 utterance.pitch = 0.95;  
                 utterance.rate = 1.0;    
 
-                const voices = availableVoices.length ? availableVoices : window.speechSynthesis.getVoices();  
-                
+                const voices = availableVoices.length ? availableVoices : window.speechSynthesis.getVoices();
                 const preferredVoice = voices.find(v => 
                     v.name.includes('Google UK English Male') || 
                     v.name.includes('Natural') ||
@@ -689,15 +684,15 @@
                 ) || voices.find(v => v.lang.includes('en-GB')) || voices[0];  
 
                 if (preferredVoice) utterance.voice = preferredVoice;  
-                window.speechSynthesis.speak(utterance);  
+                window.speechSynthesis.speak(utterance);
             } catch (e) {}  
 
-            const log = document.getElementById('log');  
+            const log = document.getElementById('log');
             if (log) log.innerText = "JARVIS: " + text;  
         }  
 
         window.speechSynthesis.onvoiceschanged = () => {  
-            availableVoices = window.speechSynthesis.getVoices();  
+            availableVoices = window.speechSynthesis.getVoices();
         };  
 
         function closePanel(panelId) {
@@ -734,7 +729,7 @@
 
             const dateStr = dateInput.value || new Date().toISOString().split('T')[0];
             familyCalendar.push({ title: titleInput.value, date: dateStr });
-            speak(`Added ${titleInput.value} to the family calendar for ${dateStr}.`);
+            speak(`Added ${titleInput.value} to Google Calendar sync for ${dateStr}.`);
             titleInput.value = '';
             dateInput.value = '';
             renderCalendar();
@@ -769,13 +764,13 @@
 
         /* DYNAMIC INTENT PARSER & COMMAND EXECUTION */
         async function processInput() {  
-            const inputField = document.getElementById('userInput');  
+            const inputField = document.getElementById('userInput');
             if (!inputField) return;  
             const query = inputField.value.trim();  
             if (!query) return;  
 
             inputField.value = '';  
-            const qLower = query.toLowerCase();  
+            const qLower = query.toLowerCase();
 
             // --- PERMANENT MEMORY COMMANDS ---
             if (qLower.startsWith('remember ') || qLower.startsWith('save ')) {
@@ -798,23 +793,17 @@
                 }
             }
 
-            // --- FEATURE 1: OPEN CALENDAR ---
-            if (qLower.includes('open calendar') || qLower.includes('open calander') || qLower.includes('show calendar')) {
+            // --- FEATURE 1: OPEN GOOGLE CALENDAR ---
+            if (qLower.includes('open calendar') || qLower.includes('open calander') || qLower.includes('show calendar') || qLower.includes('open google calendar')) {
                 showPanel('left');
                 const calElem = document.getElementById('calendar-list');
                 if (calElem) calElem.scrollIntoView({ behavior: 'smooth' });
-                speak("Opening your calendar now, Sir.");
+                speak("Opening Google Calendar for you, Sir.");
+                window.open("https://calendar.google.com", "_blank");
                 return;
             }
 
-            // --- FEATURE 2: OPEN APPLE MUSIC ---
-            if (qLower.includes('open apple music') || qLower.includes('play apple music')) {
-                speak("Opening Apple Music for you, Sir.");
-                window.open("https://music.apple.com", "_blank");
-                return;
-            }
-
-            // --- FEATURE 3: MOVE THIS TO THE OTHER SIDE OF THE SCREEN ---
+            // --- FEATURE 2: MOVE THIS TO THE OTHER SIDE OF THE SCREEN ---
             if (qLower.includes('move this to the other side') || qLower.includes('move to the other side') || qLower.includes('swap sides') || qLower.includes('switch side')) {
                 const workspace = document.getElementById('workspace');
                 if (workspace.style.gridTemplateColumns === '380px 1fr 340px') {
@@ -826,7 +815,7 @@
                 return;
             }
 
-            // --- FEATURE 4: ENLARGE SOMETHING ---
+            // --- FEATURE 3: ENLARGE SOMETHING ---
             if (qLower.includes('enlarge') || qLower.includes('make bigger') || qLower.includes('make larger')) {
                 if (qLower.includes('arc') || qLower.includes('reactor') || qLower.includes('logo')) {
                     const arc = document.getElementById('arcReactor');
@@ -847,7 +836,7 @@
                 return;
             }
 
-            // --- FEATURE 5: CLEAR EVERYTHING ON THE SCREEN ---
+            // --- FEATURE 4: CLEAR EVERYTHING ON THE SCREEN ---
             if (qLower.includes('clear everything') || qLower.includes('clear screen') || qLower.includes('wipe screen')) {
                 document.getElementById('right-content').innerHTML = '<p style="opacity: 0.7;">Screen cleared. Standing by for instructions, Sir.</p>';
                 document.getElementById('log').innerText = "SYSTEM: Interface reset complete.";
@@ -872,7 +861,7 @@
                 familyCalendar.push({ title: cleanTitle || "New Event", date: today });
                 renderCalendar();
                 showPanel('left');
-                speak(`Added ${cleanTitle || "New Event"} to your calendar, Sir.`);
+                speak(`Added ${cleanTitle || "New Event"} to your Google Calendar list, Sir.`);
                 return;
             }
 
