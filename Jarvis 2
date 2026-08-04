@@ -3,7 +3,7 @@
 <head>  
     <meta charset="UTF-8">  
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
-    <title>J.A.R.V.I.S. Core Interface v6.1</title>  
+    <title>J.A.R.V.I.S. Core Interface v6.2</title>  
     <style>  
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
 
@@ -217,12 +217,6 @@
             color: #a2f2ff;
         }
 
-        .card-actions {
-            margin-top: 10px;
-            display: flex;
-            justify-content: flex-end;
-        }
-
         .expand-btn {
             background: rgba(0, 240, 255, 0.2);
             border: 1px solid #00f0ff;
@@ -248,11 +242,6 @@
             padding: 18px;
             font-size: 0.95rem;
             line-height: 1.6;
-        }
-
-        .response-card.enlarged .card-snippet {
-            color: #ffffff;
-            font-size: 0.9rem;
         }
 
         /* VITALS AND CALENDAR */
@@ -521,6 +510,14 @@
             color: #000;  
         }  
 
+        button.mic-active {
+            background: rgba(255, 0, 85, 0.4) !important;
+            border-color: #ff0055 !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 20px #ff0055 !important;
+            animation: pulse 1s infinite;
+        }
+
         @keyframes spin { 100% { transform: rotate(360deg); } }  
         @keyframes spin-reverse { 100% { transform: rotate(-360deg); } }  
         @keyframes pulse { 0%, 100% { opacity: 0.7; transform: scale(0.98); } 50% { opacity: 1; transform: scale(1.02); } }  
@@ -530,7 +527,7 @@
 
     <div id="loader">  
         <div class="loader-ring"></div>  
-        <div class="loader-text">INITIALIZING STARK HUD v6.1...</div>  
+        <div class="loader-text">INITIALIZING STARK HUD v6.2...</div>  
     </div>  
 
     <div id="hud-container">  
@@ -624,7 +621,7 @@
                     <button class="close-btn" onclick="closePanel('right-panel')">✕</button>
                 </div>
                 <div id="right-content">  
-                    <p style="opacity: 0.7;">Greetings, Sir. Type or speak to search news, politics, concerts, animals, or edit calendar...</p>
+                    <p style="opacity: 0.7;">Greetings, Sir. Type or press MIC to give commands or search...</p>
                 </div>  
             </div>  
         </div>  
@@ -634,14 +631,17 @@
             <div class="controls">  
                 <input type="text" id="userInput" placeholder="Ask anything, say 'open my calendar', or 'remember my name is Tony'..." onkeydown="if(event.key==='Enter') processInput()">  
                 <button onclick="processInput()">SEND</button>  
-                <button onclick="startVoice()">MIC</button>  
+                <button id="micBtn" onclick="toggleVoice()">MIC</button>  
             </div>  
         </div>  
     </div>  
 
     <script>  
         let availableVoices = [];
-        /* 100% PERMANENT MEMORY STORAGE INITIALIZATION */
+        let recognition = null;
+        let isListening = false;
+
+        /* PERMANENT MEMORY STORAGE INITIALIZATION */
         let familyCalendar = JSON.parse(localStorage.getItem('jarvis_calendar')) || [
             { id: 1, title: "Family Game Night", date: "2026-08-07" },
             { id: 2, title: "Mom's Birthday", date: "2026-08-15" }
@@ -661,6 +661,7 @@
 
         window.onload = () => {
             renderCalendar();
+            initVoiceRecognition();
         };
 
         setTimeout(() => {  
@@ -684,10 +685,16 @@
             if (loadVal) loadVal.innerText = (15 + Math.floor(Math.random() * 20)) + "%";
         }, 1000);
 
-        /* ENHANCED NATURAL VOICE ENGINE */
-        function speak(text) {  
+        /* SPEECH SYNTHESIS ENGINE */
+        function speak(text, callback) {  
             try {  
                 if (!('speechSynthesis' in window)) return;
+                
+                // Temporarily pause recognition so JARVIS doesn't listen to himself
+                if (isListening && recognition) {
+                    try { recognition.stop(); } catch(e){}
+                }
+
                 window.speechSynthesis.cancel();  
 
                 const utterance = new SpeechSynthesisUtterance(text);  
@@ -704,6 +711,12 @@
                 ) || voices.find(v => v.lang.includes('en-GB')) || voices[0];  
 
                 if (preferredVoice) utterance.voice = preferredVoice;  
+                
+                utterance.onend = () => {
+                    if (isListening) startListening();
+                    if (callback) callback();
+                };
+
                 window.speechSynthesis.speak(utterance);
             } catch (e) {}  
 
@@ -762,7 +775,6 @@
             renderCalendar();
         }
 
-        /* HARDENED CALENDAR OPEN CONTROL */
         function openCalendarView() {
             showPanel('left');
             const calSection = document.getElementById('calendar-wrapper');
@@ -774,20 +786,26 @@
             speak("Opening your calendar now, Sir.");
         }
 
-        /* SPEECH RECOGNITION (MIC COMMANDS) */
-        function startVoice() {
+        /* FAULT-TOLERANT SPEECH RECOGNITION (MIC) */
+        function initVoiceRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                speak("Voice recognition is not supported in this browser, Sir.");
-                return;
-            }
-            
-            const recognition = new SpeechRecognition();
+            if (!SpeechRecognition) return;
+
+            recognition = new SpeechRecognition();
             recognition.lang = 'en-US';
             recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
 
-            const log = document.getElementById('log');
-            if (log) log.innerText = "SYSTEM: Listening for voice commands...";
+            recognition.onstart = () => {
+                isListening = true;
+                const micBtn = document.getElementById('micBtn');
+                if (micBtn) {
+                    micBtn.classList.add('mic-active');
+                    micBtn.innerText = "LISTENING...";
+                }
+                const log = document.getElementById('log');
+                if (log) log.innerText = "SYSTEM: Microphone active. Listening for commands...";
+            };
 
             recognition.onresult = (event) => {
                 const transcript = event.results[0][0].transcript;
@@ -795,22 +813,83 @@
                 processInput();
             };
 
-            recognition.onerror = () => {
-                speak("I lost your voice command, Sir. Please try again.");
+            recognition.onerror = (event) => {
+                // Ignore routine non-errors like 'no-speech' silently
+                if (event.error === 'no-speech' || event.error === 'aborted') return;
+                stopListening();
+                speak("Microphone error detected. Please try tapping MIC again, Sir.");
             };
 
-            recognition.start();
+            recognition.onend = () => {
+                if (isListening && !window.speechSynthesis.speaking) {
+                    try { recognition.start(); } catch(e){}
+                } else if (!isListening) {
+                    stopListeningUI();
+                }
+            };
+        }
+
+        function toggleVoice() {
+            if (!recognition) {
+                initVoiceRecognition();
+                if (!recognition) {
+                    speak("Voice recognition is not supported in this browser, Sir.");
+                    return;
+                }
+            }
+
+            if (isListening) {
+                stopListening();
+            } else {
+                startListening();
+            }
+        }
+
+        function startListening() {
+            if (!recognition) initVoiceRecognition();
+            isListening = true;
+            try {
+                recognition.start();
+            } catch(e) {
+                // Handle recognition already active
+            }
+        }
+
+        function stopListening() {
+            isListening = false;
+            if (recognition) {
+                try { recognition.stop(); } catch(e){}
+            }
+            stopListeningUI();
+        }
+
+        function stopListeningUI() {
+            const micBtn = document.getElementById('micBtn');
+            if (micBtn) {
+                micBtn.classList.remove('mic-active');
+                micBtn.innerText = "MIC";
+            }
+            const log = document.getElementById('log');
+            if (log && log.innerText.includes("Microphone active")) {
+                log.innerText = "SYSTEM: Standby mode active.";
+            }
         }
 
         /* DYNAMIC INTENT PARSER & COMMAND EXECUTION */
         async function processInput() {  
             const inputField = document.getElementById('userInput');
             if (!inputField) return;  
-            const query = inputField.value.trim();  
+            let query = inputField.value.trim();  
             if (!query) return;  
 
             inputField.value = '';  
-            const qLower = query.toLowerCase();
+
+            // Clean voice query by removing conversational prefixes
+            let cleanedQuery = query.toLowerCase()
+                .replace(/^(jarvis|hey jarvis|please|can you|could you|would you)\s+/gi, '')
+                .trim();
+
+            const qLower = cleanedQuery || query.toLowerCase();
 
             // --- PERMANENT MEMORY COMMANDS ---
             if (qLower.startsWith('remember ') || qLower.startsWith('save ')) {
@@ -833,13 +912,13 @@
                 }
             }
 
-            // --- FEATURE 1: OPEN / SHOW / VIEW CALENDAR (FIXED FLEXIBLE MATCHING) ---
+            // --- FEATURE 1: OPEN / SHOW CALENDAR (FLEXIBLE MATCHING) ---
             if (qLower.includes('calendar') && (qLower.includes('open') || qLower.includes('show') || qLower.includes('view') || qLower.includes('bring up') || qLower.includes('display') || qLower.includes('look at'))) {
                 openCalendarView();
                 return;
             }
 
-            if (qLower === 'calendar' || qLower === 'my calendar' || qLower === 'open calendar') {
+            if (qLower === 'calendar' || qLower === 'my calendar' || qLower === 'open calendar' || qLower === 'show calendar') {
                 openCalendarView();
                 return;
             }
