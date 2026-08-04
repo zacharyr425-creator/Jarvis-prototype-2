@@ -1,281 +1,742 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JARVIS / E.D.I.T.H. Interface</title>
-  <style>
-    :root {
-      --hud-cyan: #00f3ff;
-      --hud-blue: #0066ff;
-      --hud-bg: rgba(10, 25, 40, 0.75);
-      --hud-border: rgba(0, 243, 255, 0.5);
-      --glow-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
-    }
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
+    <title>J.A.R.V.I.S. Core Interface v5.0</title>  
+    <style>  
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');  
 
-    * {
-      box-sizing: border-box;
-      user-select: none; /* Prevents text selection while dragging */
-      -webkit-user-select: none;
-    }
+        * {  
+            box-sizing: border-box;  
+            margin: 0;  
+            padding: 0;  
+            user-select: none;  
+        }  
 
-    body {
-      margin: 0;
-      padding: 0;
-      width: 100vw;
-      height: 100vh;
-      background: radial-gradient(circle at center, #0B192C 0%, #020813 100%);
-      font-family: 'Segoe UI', Roboto, 'Courier New', sans-serif;
-      color: var(--hud-cyan);
-      overflow: hidden;
-      touch-action: none; /* Prevents default browser swipe/scroll behaviors */
-    }
+        html, body {  
+            width: 100%;  
+            height: 100%;  
+            background-color: #02060e;  
+            color: #00f0ff;  
+            font-family: 'Share Tech Mono', monospace;  
+            overflow: hidden;  
+            display: flex;  
+            flex-direction: column;  
+        }  
 
-    /* Grid overlay for holographic look */
-    .grid-overlay {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background-image: 
-        linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-    }
+        /* CRT Overlay Filter */
+        body::before {  
+            content: " ";  
+            position: absolute;  
+            inset: 0;  
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));  
+            z-index: 10;  
+            background-size: 100% 3px, 6px 100%;  
+            pointer-events: none;  
+        }  
 
-    /* Target Reticle in Center */
-    .reticle {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 300px;
-      height: 300px;
-      border: 1px dashed rgba(0, 243, 255, 0.2);
-      border-radius: 50%;
-      pointer-events: none;
-    }
+        #loader {  
+            position: fixed;  
+            inset: 0;  
+            background-color: #02060e;  
+            display: flex;  
+            flex-direction: column;  
+            justify-content: center;  
+            align-items: center;  
+            z-index: 999;  
+            transition: opacity 0.8s ease;  
+        }  
 
-    .reticle::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 10px;
-      height: 10px;
-      background: var(--hud-cyan);
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      box-shadow: var(--glow-shadow);
-    }
+        .loader-ring {  
+            width: 100px;  
+            height: 100px;  
+            border: 3px solid transparent;  
+            border-top: 3px solid #00f0ff;  
+            border-bottom: 3px solid #00f0ff;
+            border-radius: 50%;  
+            animation: spin 1s linear infinite;  
+            box-shadow: 0 0 20px #00f0ff;  
+        }  
 
-    /* Main Container Floating HUD Panel */
-    .hud-panel {
-      position: absolute;
-      top: 80px;
-      left: 80px;
-      width: 360px;
-      background: var(--hud-bg);
-      border: 1px solid var(--hud-border);
-      border-radius: 8px;
-      box-shadow: var(--glow-shadow);
-      backdrop-filter: blur(10px);
-      padding: 16px;
-      touch-action: none;
-      transition: box-shadow 0.2s ease;
-    }
+        .loader-text {  
+            margin-top: 25px;  
+            font-family: 'Orbitron', sans-serif;  
+            font-size: 0.9rem;  
+            letter-spacing: 3px;  
+            color: #00f0ff;
+            text-shadow: 0 0 10px #00f0ff;  
+            animation: pulse 1.5s infinite;  
+        }  
 
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--hud-border);
-      font-size: 0.85rem;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      font-weight: bold;
-      cursor: move;
-    }
+        #hud-container {  
+            flex: 1;  
+            width: 100vw;  
+            height: 100vh;  
+            border: 1px solid rgba(0, 240, 255, 0.3);  
+            box-shadow: inset 0 0 30px rgba(0, 240, 255, 0.1);  
+            background: radial-gradient(circle at center, rgba(4, 20, 45, 0.8) 0%, rgba(2, 6, 14, 0.95) 100%);  
+            display: flex;  
+            flex-direction: column;  
+            padding: 15px;  
+            gap: 12px;  
+        }  
 
-    .panel-status {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.75rem;
-    }
+        header {  
+            display: flex;  
+            justify-content: space-between;  
+            align-items: center;  
+            border-bottom: 1px solid rgba(0, 240, 255, 0.4);  
+            padding-bottom: 8px;  
+            height: 40px;  
+        }  
 
-    .dot {
-      width: 8px;
-      height: 8px;
-      background: var(--hud-cyan);
-      border-radius: 50%;
-      box-shadow: 0 0 8px var(--hud-cyan);
-    }
+        .system-title {  
+            font-family: 'Orbitron', sans-serif;  
+            font-weight: 900;
+            font-size: 1.2rem;  
+            letter-spacing: 3px;  
+            text-shadow: 0 0 12px #00f0ff;  
+        }  
 
-    /* Draggable Item Cards */
-    .hud-card-container {
-      margin-top: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      min-height: 100px;
-    }
-
-    .hud-card {
-      background: rgba(0, 102, 255, 0.15);
-      border: 1px solid rgba(0, 243, 255, 0.4);
-      border-left: 4px solid var(--hud-cyan);
-      border-radius: 4px;
-      padding: 12px;
-      cursor: grab;
-      touch-action: none;
-      transition: transform 0.1s ease, background 0.2s;
-    }
-
-    .hud-card:active {
-      cursor: grabbing;
-      background: rgba(0, 243, 255, 0.25);
-    }
-
-    /* Class applied when a card is extracted into free space */
-    .hud-card.detached {
-      position: absolute;
-      width: 320px;
-      z-index: 1000;
-      box-shadow: 0 0 20px rgba(0, 243, 255, 0.6);
-      border-color: var(--hud-cyan);
-    }
-
-    .card-tag {
-      font-size: 0.65rem;
-      letter-spacing: 1px;
-      opacity: 0.8;
-      margin-bottom: 4px;
-      text-transform: uppercase;
-    }
-
-    .card-title {
-      font-weight: 600;
-      font-size: 0.95rem;
-      margin-bottom: 4px;
-      color: #fff;
-    }
-
-    .card-body {
-      font-size: 0.8rem;
-      color: #b0e8ff;
-      line-height: 1.3;
-    }
-  </style>
-</head>
-<body>
-
-  <div class="grid-overlay"></div>
-  <div class="reticle"></div>
-
-  <div class="hud-panel" id="mainPanel">
-    <div class="panel-header" id="mainHeader">
-      <span>// NFL NEWS FEED</span>
-      <div class="panel-status"><div class="dot"></div> LIVE</div>
-    </div>
-
-    <div class="hud-card-container" id="cardContainer">
-      
-      <div class="hud-card">
-        <div class="card-tag">NFL UPDATE #01</div>
-        <div class="card-title">Super Bowl LIX Highlights</div>
-        <div class="card-body">Tactical breakdown and key metrics from recent postseason play.</div>
-      </div>
-
-      <div class="hud-card">
-        <div class="card-tag">NFL UPDATE #02</div>
-        <div class="card-title">Draft Prospects Matrix</div>
-        <div class="card-body">Top 10 rookie prospects analyzed for upcoming team selections.</div>
-      </div>
-
-      <div class="hud-card">
-        <div class="card-tag">NFL UPDATE #03</div>
-        <div class="card-title">Injury & Roster Reports</div>
-        <div class="card-body">Real-time update on active roster adjustments and telemetry.</div>
-      </div>
-
-    </div>
-  </div>
-
-  <script>
-    // Universal Drag Handler using Pointer Events (Mouse + Touch)
-    function enableDrag(element, handle = element) {
-      let active = false;
-      let currentX, currentY, initialX, initialY;
-      let xOffset = 0, yOffset = 0;
-
-      handle.addEventListener("pointerdown", pointerStart);
-
-      function pointerStart(e) {
-        // Prevent default touch behaviors
-        e.preventDefault();
-
-        // If card is inside container, detach it into absolute floating position on grab
-        if (element.classList.contains("hud-card") && !element.classList.contains("detached")) {
-          const rect = element.getBoundingClientRect();
-          
-          element.classList.add("detached");
-          document.body.appendChild(element); // Move directly to screen overlay level
-
-          element.style.left = rect.left + "px";
-          element.style.top = rect.top + "px";
-          xOffset = rect.left;
-          yOffset = rect.top;
-        } else if (!element.classList.contains("detached")) {
-          xOffset = element.offsetLeft;
-          yOffset = element.offsetTop;
+        #clock {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px #00f0ff;
         }
 
-        initialX = e.clientX - xOffset;
-        initialY = e.clientY - yOffset;
+        .workspace {  
+            flex: 1;  
+            display: grid;  
+            grid-template-columns: 320px 1fr 380px;  
+            gap: 15px;  
+            position: relative;  
+            align-items: center;  
+            overflow: hidden;  
+        }  
 
-        active = true;
-        handle.setPointerCapture(e.pointerId);
+        .hud-panel {  
+            background: rgba(0, 240, 255, 0.04);  
+            border: 1px solid rgba(0, 240, 255, 0.6);  
+            padding: 15px;  
+            border-radius: 8px;  
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), inset 0 0 15px rgba(0, 240, 255, 0.05);  
+            height: 100%;  
+            overflow-y: auto;  
+            display: block;  
+            font-size: 0.85rem;  
+            line-height: 1.5;  
+            position: relative;
+            z-index: 5;
+        }  
 
-        handle.addEventListener("pointermove", pointerMove);
-        handle.addEventListener("pointerup", pointerEnd);
-        handle.addEventListener("pointercancel", pointerEnd);
-      }
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.4);  
+            margin-bottom: 12px;  
+            padding-bottom: 6px;  
+        }
 
-      function pointerMove(e) {
-        if (!active) return;
-        e.preventDefault();
+        .hud-panel h3 {  
+            font-family: 'Orbitron', sans-serif;  
+            font-size: 0.95rem;  
+            color: #ffffff;  
+            text-shadow: 0 0 8px #00f0ff;  
+            text-transform: uppercase;  
+            letter-spacing: 1px;
+            margin: 0;
+        }  
 
-        currentX = e.clientX - initialX;
-        currentY = e.clientY - initialY;
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: #00f0ff;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            padding: 2px 6px;
+            box-shadow: none;
+        }
 
-        xOffset = currentX;
-        yOffset = currentY;
+        .close-btn:hover {
+            color: #ff3366;
+            text-shadow: 0 0 8px #ff3366;
+            background: transparent;
+            box-shadow: none;
+        }
 
-        element.style.left = currentX + "px";
-        element.style.top = currentY + "px";
-      }
+        /* RESPONSE CARD STYLING */
+        .response-card {
+            background: rgba(0, 240, 255, 0.08);
+            border: 1px solid rgba(0, 240, 255, 0.4);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            cursor: grab;
+            transition: all 0.2s ease;
+        }
 
-      function pointerEnd(e) {
-        if (!active) return;
-        active = false;
+        .response-card:hover {
+            background: rgba(0, 240, 255, 0.18);
+            border-color: #00f0ff;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+        }
 
-        handle.releasePointerCapture(e.pointerId);
-        handle.removeEventListener("pointermove", pointerMove);
-        handle.removeEventListener("pointerup", pointerEnd);
-        handle.removeEventListener("pointercancel", pointerEnd);
-      }
-    }
+        .response-card .card-source {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            color: #ff007f;
+            text-shadow: 0 0 5px #ff007f;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
 
-    // 1. Enable whole main panel dragging via its header bar
-    const mainPanel = document.getElementById("mainPanel");
-    const mainHeader = document.getElementById("mainHeader");
-    enableDrag(mainPanel, mainHeader);
+        .response-card .card-title {
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 6px;
+        }
 
-    // 2. Enable dragging on all cards inside container
-    const cards = document.querySelectorAll(".hud-card");
-    cards.forEach(card => enableDrag(card));
-  </script>
-</body>
+        .response-card .card-snippet {
+            font-size: 0.8rem;
+            color: #a2f2ff;
+        }
+
+        /* READING OVERLAY MODAL */
+        #reading-modal {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 550px;
+            max-width: 90vw;
+            max-height: 70vh;
+            background: rgba(2, 10, 25, 0.95);
+            border: 2px solid #00f0ff;
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+            z-index: 100;
+            overflow-y: auto;
+            cursor: move;
+        }
+
+        #reading-modal h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            color: #ffffff;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #00f0ff;
+            padding-bottom: 5px;
+        }
+
+        #reading-modal-content {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #e0ffff;
+            margin-top: 10px;
+        }
+
+        /* VITALS AND DIAGNOSTICS */
+        .vital-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 6px 0;
+            padding: 6px;
+            background: rgba(0, 240, 255, 0.05);
+            border-left: 2px solid #00f0ff;
+        }
+
+        .vital-value {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        /* ARC REACTOR LOGO DESIGN */  
+        .logo-container {  
+            display: flex;  
+            justify-content: center;  
+            align-items: center;  
+            grid-column: 2;  
+            position: relative;  
+            height: 100%;
+        }  
+
+        .arc-reactor {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .arc-outer-ring {
+            position: absolute;
+            inset: 0;
+            border: 2px dashed rgba(0, 240, 255, 0.5);
+            border-radius: 50%;
+            animation: spin 20s linear infinite;
+        }
+
+        .arc-segment-ring {
+            position: absolute;
+            inset: 12px;
+            border: 3px solid transparent;
+            border-top: 3px solid #00f0ff;
+            border-bottom: 3px solid #00f0ff;
+            border-radius: 50%;
+            animation: spin-reverse 10s linear infinite;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+        }
+
+        .arc-inner-housing {
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 240, 255, 0.8);
+            background: rgba(0, 240, 255, 0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+        }
+
+        .arc-coils {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: repeating-conic-gradient(
+                from 0deg,
+                #00f0ff 0deg 15deg,
+                transparent 15deg 36deg
+            );
+            opacity: 0.85;
+            mask-image: radial-gradient(circle, transparent 52%, black 53%, black 70%, transparent 71%);
+            -webkit-mask-image: radial-gradient(circle, transparent 52%, black 53%, black 70%, transparent 71%);
+            filter: drop-shadow(0 0 8px #00f0ff);
+        }
+
+        .arc-core-glow {
+            width: 65px;
+            height: 65px;
+            background: #ffffff;
+            border-radius: 50%;
+            box-shadow: 
+                0 0 20px #00f0ff,
+                0 0 40px #00f0ff,
+                0 0 60px #00f0ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+        .arc-center-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 900;
+            color: #02060e;
+            letter-spacing: 1.5px;
+        }
+
+        .terminal-area {  
+            display: flex;  
+            flex-direction: column;  
+            gap: 8px;  
+            height: 110px;  
+        }  
+
+        .log-box {  
+            flex: 1;  
+            overflow-y: auto;  
+            color: #7df9ff;  
+            font-size: 0.85rem;  
+            text-shadow: 0 0 5px #00f0ff;  
+            background: rgba(0, 0, 0, 0.5);  
+            padding: 8px 12px;  
+            border-radius: 4px;  
+            border: 1px solid rgba(0, 240, 255, 0.3);  
+            display: flex;
+            align-items: center;
+        }  
+
+        .controls {  
+            display: flex;  
+            gap: 10px;  
+        }  
+
+        input[type="text"] {  
+            flex: 1;  
+            background: rgba(0, 240, 255, 0.08);  
+            border: 1px solid #00f0ff;  
+            color: #00f0ff;  
+            padding: 10px 14px;  
+            font-family: 'Share Tech Mono', monospace;  
+            font-size: 0.95rem;  
+            outline: none;  
+            border-radius: 4px;  
+            box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.1);
+        }  
+
+        input[type="text"]::placeholder {
+            color: rgba(0, 240, 255, 0.5);
+        }
+
+        button {  
+            background: rgba(0, 240, 255, 0.2);  
+            border: 1px solid #00f0ff;  
+            color: #00f0ff;  
+            padding: 10px 18px;  
+            cursor: pointer;  
+            font-family: 'Orbitron', sans-serif;  
+            font-weight: bold;
+            font-size: 0.8rem;  
+            border-radius: 4px;  
+            transition: all 0.2s;  
+            letter-spacing: 1px;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+        }  
+
+        button:hover {
+            background: rgba(0, 240, 255, 0.4);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.6);
+        }
+
+        button:active {  
+            background: #00f0ff;  
+            color: #000;  
+        }  
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }  
+        @keyframes spin-reverse { 100% { transform: rotate(-360deg); } }  
+        @keyframes pulse { 0%, 100% { opacity: 0.7; transform: scale(0.98); } 50% { opacity: 1; transform: scale(1.02); } }  
+    </style>  
+</head>  
+<body>  
+
+    <div id="loader">  
+        <div class="loader-ring"></div>  
+        <div class="loader-text">INITIALIZING STARK HUD v5.0...</div>  
+    </div>  
+
+    <div id="hud-container">  
+        <header>  
+            <div class="system-title">J.A.R.V.I.S.</div>  
+            <div id="clock">00:00:00</div>  
+        </header>  
+
+        <div id="workspace" class="workspace">  
+            <div id="left-panel" class="hud-panel">  
+                <div class="panel-header">
+                    <h3 id="left-title">SYSTEM & VITALS</h3>  
+                    <button class="close-btn" onclick="closePanel('left-panel')">✕</button>
+                </div>
+                <div id="left-content">  
+                    <div class="vital-row"><span>CPU HEAT TEMP:</span> <span id="val-temp" class="vital-value">42°C</span></div>
+                    <div class="vital-row"><span>CORE LOAD:</span> <span id="val-load" class="vital-value">18%</span></div>
+                    <div class="vital-row"><span>COOLING FAN:</span> <span class="vital-value">2400 RPM</span></div>
+                    <div style="margin-top: 15px; border-bottom: 1px solid rgba(0, 240, 255, 0.3); padding-bottom: 4px; font-weight: bold;">USER BIOMETRIC VITALS</div>
+                    <div class="vital-row"><span>HEART RATE:</span> <span id="val-hr" class="vital-value">72 BPM</span></div>
+                    <div class="vital-row"><span>BLOOD OXYGEN (SpO2):</span> <span class="vital-value">99%</span></div>
+                    <div class="vital-row"><span>NEURAL FREQ:</span> <span class="vital-value">14.2 Hz</span></div>
+                </div>  
+            </div>  
+
+            <div class="logo-container">  
+                <div class="arc-reactor">
+                    <div class="arc-outer-ring"></div>
+                    <div class="arc-segment-ring"></div>
+                    <div class="arc-inner-housing">
+                        <div class="arc-coils"></div>
+                        <div class="arc-core-glow">
+                            <span class="arc-center-label">STARK</span>
+                        </div>
+                    </div>
+                </div>
+            </div>  
+
+            <div id="right-panel" class="hud-panel">  
+                <div class="panel-header">
+                    <h3 id="right-title">RESPONSE STACK</h3>  
+                    <button class="close-btn" onclick="closePanel('right-panel')">✕</button>
+                </div>
+                <div id="right-content">  
+                    <p style="opacity: 0.7;">Enter a query to generate multiple telemetry options...</p>
+                </div>  
+            </div>  
+        </div>  
+
+        <div id="reading-modal">
+            <div class="panel-header">
+                <h3 id="modal-title">EXTRACTED TELEMETRY</h3>
+                <button class="close-btn" onclick="closeModal()">✕</button>
+            </div>
+            <div id="reading-modal-content">Select or drag a response option to inspect...</div>
+        </div>
+
+        <div class="terminal-area">  
+            <div id="log" class="log-box">SYSTEM: Standby mode active. Multi-source engine ready.</div>  
+            <div class="controls">  
+                <input type="text" id="userInput" placeholder="Ask JARVIS, request news/sports, or ask to write..." onkeydown="if(event.key==='Enter') processInput()">  
+                <button onclick="processInput()">SEND</button>  
+                <button onclick="startVoice()">MIC</button>  
+            </div>  
+        </div>  
+    </div>  
+
+    <script>  
+        let availableVoices = [];  
+
+        const FEEDS = {
+            espn: 'https://www.espn.com/espn/rss/news',
+            espn_nfl: 'https://www.espn.com/espn/rss/nfl/news',
+            foxnews: 'https://moxie.foxnews.com/google-publisher/latest.xml'
+        };
+
+        setTimeout(() => {  
+            const loader = document.getElementById('loader');  
+            if (loader) {  
+                loader.style.opacity = '0';  
+                setTimeout(() => {  
+                    loader.style.display = 'none';  
+                    speak("System online. Multi-response synthesis ready, Sir.");  
+                }, 800);  
+            }  
+        }, 1500);  
+
+        setInterval(() => {  
+            const clock = document.getElementById('clock');  
+            if (clock) clock.innerText = new Date().toLocaleTimeString();  
+            
+            const tempVal = document.getElementById('val-temp');
+            const loadVal = document.getElementById('val-load');
+            const hrVal = document.getElementById('val-hr');
+            if (tempVal) tempVal.innerText = (40 + Math.floor(Math.random() * 5)) + "°C";
+            if (loadVal) loadVal.innerText = (15 + Math.floor(Math.random() * 20)) + "%";
+            if (hrVal) hrVal.innerText = (70 + Math.floor(Math.random() * 6)) + " BPM";
+        }, 1000);  
+
+        function speak(text) {  
+            try {  
+                if (!('speechSynthesis' in window)) return;  
+                window.speechSynthesis.cancel();  
+                const utterance = new SpeechSynthesisUtterance(text);  
+                utterance.pitch = 0.8;  
+                utterance.rate = 0.95;  
+
+                const voices = availableVoices.length ? availableVoices : window.speechSynthesis.getVoices();  
+                const preferredVoice = voices.find(v =>   
+                    v.name.includes('Google UK English Male') ||   
+                    v.name.includes('George') ||   
+                    v.name.includes('Daniel')  
+                ) || voices.find(v => v.lang.includes('en-GB')) || voices[0];  
+
+                if (preferredVoice) utterance.voice = preferredVoice;  
+                window.speechSynthesis.speak(utterance);  
+            } catch (e) {}  
+
+            const log = document.getElementById('log');  
+            if (log) log.innerText = "JARVIS: " + text;  
+        }  
+
+        window.speechSynthesis.onvoiceschanged = () => {  
+            availableVoices = window.speechSynthesis.getVoices();  
+        };  
+
+        function closePanel(panelId) {
+            document.getElementById(panelId).style.display = 'none';
+        }
+
+        function closeModal() {
+            document.getElementById('reading-modal').style.display = 'none';
+        }
+
+        async function processInput() {  
+            const inputField = document.getElementById('userInput');  
+            if (!inputField) return;  
+            const query = inputField.value.trim();  
+            if (!query) return;  
+
+            inputField.value = '';  
+            const qLower = query.toLowerCase();  
+
+            speak("Synthesizing 3 to 5 options for " + query + ", Sir.");
+            showPanel('right');
+            document.getElementById('right-title').innerText = "OPTIONS: " + query.toUpperCase();
+            document.getElementById('right-content').innerHTML = "<p>Scanning primary and secondary channels...</p>";
+
+            // Fetch multi-option responses
+            if (qLower.includes('espn') || qLower.includes('news') || qLower.includes('sports') || qLower.includes('nfl')) {
+                await fetchMultiNews(query);
+            } else {
+                await fetchMultiKnowledge(query);
+            }
+        }  
+
+        // Generate 3-5 news cards
+        async function fetchMultiNews(query) {
+            let rssUrl = FEEDS.espn;
+            if (query.toLowerCase().includes('fox')) rssUrl = FEEDS.foxnews;
+            if (query.toLowerCase().includes('nfl')) rssUrl = FEEDS.espn_nfl;
+
+            try {
+                const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                if (data.status === 'ok' && data.items && data.items.length >= 3) {
+                    const items = data.items.slice(0, 4);
+                    renderCards(items.map((item, idx) => ({
+                        source: `OPTION 0${idx + 1} - LIVE FEED`,
+                        title: item.title,
+                        snippet: item.description ? item.description.replace(/<[^>]*>?/gm, '').slice(0, 90) + '...' : 'Click to inspect full details.',
+                        fullText: item.description ? item.description.replace(/<[^>]*>?/gm, '') : item.title
+                    })));
+                } else {
+                    generateFallbackCards(query);
+                }
+            } catch (e) {
+                generateFallbackCards(query);
+            }
+        }
+
+        // Generate 3-5 knowledge/general cards
+        async function fetchMultiKnowledge(query) {
+            let options = [];
+            try {
+                const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+                const res = await fetch(wikiUrl);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.extract) {
+                        options.push({
+                            source: 'OPTION 01 - WIKIPEDIA CORE',
+                            title: data.title || query,
+                            snippet: data.extract.slice(0, 90) + '...',
+                            fullText: data.extract
+                        });
+                    }
+                }
+            } catch (e) {}
+
+            // Fill remaining options up to 4
+            const dynamicAngles = [
+                { source: 'OPTION 02 - STRATEGIC OVERVIEW', title: `Analytical Breakdown: ${query}`, snippet: `Core metrics and operational significance of ${query}.`, fullText: `Comprehensive overview of ${query}. Historical and structural parameters indicate high relevance to ongoing operational tasks.` },
+                { source: 'OPTION 03 - TECHNICAL TELEMETRY', title: `Data Diagnostics: ${query}`, snippet: `System metrics and technical parameters related to ${query}.`, fullText: `Technical specifications and sub-component evaluations for ${query}. All values calibrated within normal tolerances.` },
+                { source: 'OPTION 04 - EXECUTIVE SUMMARY', title: `Actionable Insights: ${query}`, snippet: `Short executive briefing regarding ${query}.`, fullText: `Executive summary: Primary objectives associated with ${query} are synchronized. No critical operational risks detected.` }
+            ];
+
+            options = options.concat(dynamicAngles).slice(0, 4);
+            renderCards(options);
+        }
+
+        function generateFallbackCards(query) {
+            const fallback = [
+                { source: 'OPTION 01 - BRIEF', title: `Quick Summary: ${query}`, snippet: `Primary summary metrics for ${query}.`, fullText: `Primary summary metrics for ${query} have been gathered from local network caches.` },
+                { source: 'OPTION 02 - DETAILED', title: `Deep Dive: ${query}`, snippet: `Extended telemetry and contextual details on ${query}.`, fullText: `Extended telemetry reveals deeper systemic relationships and secondary data points regarding ${query}.` },
+                { source: 'OPTION 03 - HIGHLIGHTS', title: `Key Takeaways: ${query}`, snippet: `Condensed highlights for rapid assessment.`, fullText: `Key Takeaways:\n1. Core parameters identified.\n2. Target status nominal.\n3. Ready for further command input.` }
+            ];
+            renderCards(fallback);
+        }
+
+        function renderCards(cardList) {
+            const rightContent = document.getElementById('right-content');
+            rightContent.innerHTML = '';
+
+            cardList.forEach((card, index) => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'response-card';
+                cardDiv.innerHTML = `
+                    <div class="card-source">${card.source}</div>
+                    <div class="card-title">${card.title}</div>
+                    <div class="card-snippet">${card.snippet}</div>
+                `;
+
+                // Handle Click/Drag to pop out reading modal
+                cardDiv.onclick = () => openReadingModal(card.title, card.fullText);
+                
+                rightContent.appendChild(cardDiv);
+            });
+
+            speak(`I have generated ${cardList.length} options. Click or drag any option to inspect it, Sir.`);
+        }
+
+        function openReadingModal(title, content) {
+            const modal = document.getElementById('reading-modal');
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('reading-modal-content').innerText = content;
+            modal.style.display = 'block';
+            speak("Displaying telemetry in full view.");
+        }
+
+        function showPanel(panelId) {  
+            const p = document.getElementById(panelId === 'left' ? 'left-panel' : 'right-panel');
+            if (p) p.style.display = 'block';  
+        }  
+
+        function startVoice() {  
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;  
+            if (!SpeechRecognition) {  
+                alert("Speech recognition is not supported in this browser.");  
+                return;  
+            }  
+
+            const recognition = new SpeechRecognition();  
+            recognition.lang = 'en-GB';  
+            recognition.start();  
+
+            const log = document.getElementById('log');  
+            if (log) log.innerText = "SYSTEM: Listening...";  
+
+            recognition.onresult = (event) => {  
+                const transcript = event.results[0][0].transcript;  
+                document.getElementById('userInput').value = transcript;  
+                processInput();  
+            };  
+
+            recognition.onerror = () => {  
+                speak("I didn't catch that, Sir.");  
+            };  
+        }  
+
+        // DRAG ENGINE FOR READING OVERLAY
+        const modal = document.getElementById("reading-modal");
+        let isDragging = false, currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0;
+
+        modal.addEventListener("mousedown", dragStart);
+        document.addEventListener("mouseup", dragEnd);
+        document.addEventListener("mousemove", drag);
+
+        function dragStart(e) {
+            if (e.target.tagName === 'BUTTON') return;
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+            isDragging = true;
+        }
+
+        function dragEnd() {
+            initialX = currentX;
+            initialY = currentY;
+            isDragging = false;
+        }
+
+        function drag(e) {
+            if (isDragging) {
+                e.preventDefault();
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+                xOffset = currentX;
+                yOffset = currentY;
+                modal.style.transform = `translate(calc(-50% + ${currentX}px), calc(-50% + ${currentY}px))`;
+            }
+        }
+    </script>  
+</body>  
 </html>
