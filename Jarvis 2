@@ -304,6 +304,44 @@
             font-size: 0.8rem;
         }
 
+        /* WEBSITES LINK PANEL STYLING */
+        .site-category {
+            margin-top: 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            color: #ff007f;
+            text-shadow: 0 0 5px #ff007f;
+            letter-spacing: 1px;
+        }
+
+        .site-links-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .site-link {
+            color: #a2f2ff;
+            text-decoration: none;
+            background: rgba(0, 240, 255, 0.06);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.78rem;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .site-link:hover {
+            background: rgba(0, 240, 255, 0.25);
+            color: #ffffff;
+            border-color: #00f0ff;
+            box-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+        }
+
         /* ARC REACTOR LOGO DESIGN */  
         .logo-container {  
             display: flex;  
@@ -482,7 +520,7 @@
         <div id="workspace" class="workspace">  
             <div id="left-panel" class="hud-panel">  
                 <div class="panel-header">
-                    <h3 id="left-title">SYSTEM & CALENDAR</h3>  
+                    <h3 id="left-title">SYSTEM & DATA NETWORK</h3>  
                     <button class="close-btn" onclick="closePanel('left-panel')">✕</button>
                 </div>
                 <div id="left-content">  
@@ -496,7 +534,51 @@
                         <button onclick="addCalendarEventFromUI()">ADD EVENT</button>
                     </div>
                     <div id="calendar-list" class="calendar-list">
-                        </div>
+                    </div>
+
+                    <div style="margin-top: 18px; border-bottom: 1px solid rgba(0, 240, 255, 0.3); padding-bottom: 4px; font-weight: bold;">DATABASE & SOURCES</div>
+                    
+                    <div class="site-category">1. SPORTS</div>
+                    <div class="site-links-grid">
+                        <a href="https://www.espn.com" target="_blank" class="site-link"><span>ESPN</span> ↗</a>
+                        <a href="https://www.bbc.com/sport" target="_blank" class="site-link"><span>BBC Sport</span> ↗</a>
+                        <a href="https://theathletic.com" target="_blank" class="site-link"><span>The Athletic</span> ↗</a>
+                    </div>
+
+                    <div class="site-category">2. SCIENCE</div>
+                    <div class="site-links-grid">
+                        <a href="https://www.sciencenews.org" target="_blank" class="site-link"><span>ScienceNews</span> ↗</a>
+                        <a href="https://www.nasa.gov" target="_blank" class="site-link"><span>NASA</span> ↗</a>
+                        <a href="https://www.livescience.com" target="_blank" class="site-link"><span>Live Science</span> ↗</a>
+                    </div>
+
+                    <div class="site-category">3. POLITICS</div>
+                    <div class="site-links-grid">
+                        <a href="https://www.reuters.com" target="_blank" class="site-link"><span>Reuters</span> ↗</a>
+                        <a href="https://apnews.com" target="_blank" class="site-link"><span>AP News</span> ↗</a>
+                        <a href="https://www.pewresearch.org" target="_blank" class="site-link"><span>Pew Research</span> ↗</a>
+                    </div>
+
+                    <div class="site-category">4. HISTORY</div>
+                    <div class="site-links-grid">
+                        <a href="https://www.worldhistory.org" target="_blank" class="site-link"><span>World History</span> ↗</a>
+                        <a href="https://www.history.com" target="_blank" class="site-link"><span>History.com</span> ↗</a>
+                        <a href="https://www.archives.gov" target="_blank" class="site-link"><span>National Archives</span> ↗</a>
+                    </div>
+
+                    <div class="site-category">5. GRAMMAR</div>
+                    <div class="site-links-grid">
+                        <a href="https://owl.purdue.edu" target="_blank" class="site-link"><span>Purdue OWL</span> ↗</a>
+                        <a href="https://www.grammarly.com/blog" target="_blank" class="site-link"><span>Grammarly Blog</span> ↗</a>
+                        <a href="https://www.merriam-webster.com" target="_blank" class="site-link"><span>Merriam-Webster</span> ↗</a>
+                    </div>
+
+                    <div class="site-category">6. GENERAL KNOWLEDGE</div>
+                    <div class="site-links-grid">
+                        <a href="https://www.britannica.com" target="_blank" class="site-link"><span>Britannica</span> ↗</a>
+                        <a href="https://www.snopes.com" target="_blank" class="site-link"><span>Snopes</span> ↗</a>
+                        <a href="https://www.wolframalpha.com" target="_blank" class="site-link"><span>WolframAlpha</span> ↗</a>
+                    </div>
                 </div>  
             </div>  
 
