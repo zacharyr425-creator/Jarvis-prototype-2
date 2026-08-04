@@ -23,6 +23,7 @@
             overflow: hidden;  
             display: flex;  
             flex-direction: column;  
+            transition: transform 0.4s ease;
         }  
 
         /* CRT Overlay Filter */
@@ -115,6 +116,7 @@
             position: relative;  
             align-items: center;  
             overflow: hidden;  
+            transition: all 0.5s ease;
         }  
 
         .hud-panel {  
@@ -130,6 +132,7 @@
             line-height: 1.5;  
             position: relative;
             z-index: 5;
+            transition: all 0.4s ease;
         }  
 
         .panel-header {
@@ -178,7 +181,7 @@
             margin-bottom: 12px;
             border-radius: 6px;
             cursor: grab;
-            transition: background 0.2s, box-shadow 0.2s, width 0.3s, height 0.3s;
+            transition: background 0.2s, box-shadow 0.2s, transform 0.3s ease, width 0.3s ease;
             position: relative;
             z-index: 20;
             touch-action: none;
@@ -237,8 +240,8 @@
         }
 
         .response-card.enlarged {
-            width: 480px !important;
-            max-width: 80vw;
+            width: 100% !important;
+            transform: scale(1.05);
             background: rgba(2, 10, 25, 0.95);
             border: 2px solid #00f0ff;
             box-shadow: 0 0 25px rgba(0, 240, 255, 0.6);
@@ -359,6 +362,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            transition: transform 0.4s ease;
         }
 
         .arc-outer-ring {
@@ -583,7 +587,7 @@
             </div>  
 
             <div class="logo-container">  
-                <div class="arc-reactor">
+                <div id="arcReactor" class="arc-reactor">
                     <div class="arc-outer-ring"></div>
                     <div class="arc-segment-ring"></div>
                     <div class="arc-inner-housing">
@@ -609,7 +613,7 @@
         <div class="terminal-area">  
             <div id="log" class="log-box">SYSTEM: Standby mode active. Conversational mode online.</div>  
             <div class="controls">  
-                <input type="text" id="userInput" placeholder="Ask anything or say 'add doctor appointment on Friday'..." onkeydown="if(event.key==='Enter') processInput()">  
+                <input type="text" id="userInput" placeholder="Ask anything or say 'open calendar', 'clear everything'..." onkeydown="if(event.key==='Enter') processInput()">  
                 <button onclick="processInput()">SEND</button>  
                 <button onclick="startVoice()">MIC</button>  
             </div>  
@@ -667,12 +671,11 @@
                 window.speechSynthesis.cancel();  
 
                 const utterance = new SpeechSynthesisUtterance(text);  
-                utterance.pitch = 0.95;  // Slightly warmer tone
-                utterance.rate = 1.0;    // Natural human cadence
+                utterance.pitch = 0.95;  
+                utterance.rate = 1.0;    
 
                 const voices = availableVoices.length ? availableVoices : window.speechSynthesis.getVoices();  
                 
-                // Prioritize smooth high-quality natural voices if available
                 const preferredVoice = voices.find(v => 
                     v.name.includes('Google UK English Male') || 
                     v.name.includes('Natural') ||
@@ -697,10 +700,16 @@
             document.getElementById(panelId).style.display = 'none';
         }
 
+        function showPanel(panelSide) {
+            const panel = document.getElementById(panelSide + '-panel');
+            if (panel) panel.style.display = 'block';
+        }
+
         function renderCalendar() {
             const list = document.getElementById('calendar-list');
+            if (!list) return;
             list.innerHTML = '';
-            familyCalendar.forEach((evt, idx) => {
+            familyCalendar.forEach((evt) => {
                 const item = document.createElement('div');
                 item.className = 'calendar-item';
                 item.innerHTML = `<div class="event-title">${evt.title}</div><div class="event-date">📅 ${evt.date}</div>`;
@@ -721,7 +730,34 @@
             renderCalendar();
         }
 
-        /* DYNAMIC INTENT PARSER & UNIVERSAL SEARCH ENGINE */
+        /* SPEECH RECOGNITION (MIC COMMANDS) */
+        function startVoice() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                speak("Voice recognition is not supported in this browser, Sir.");
+                return;
+            }
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+
+            const log = document.getElementById('log');
+            if (log) log.innerText = "SYSTEM: Listening for voice commands...";
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('userInput').value = transcript;
+                processInput();
+            };
+
+            recognition.onerror = () => {
+                speak("I lost your voice command, Sir. Please try again.");
+            };
+
+            recognition.start();
+        }
+
+        /* DYNAMIC INTENT PARSER & COMMAND EXECUTION */
         async function processInput() {  
             const inputField = document.getElementById('userInput');  
             if (!inputField) return;  
@@ -731,14 +767,74 @@
             inputField.value = '';  
             const qLower = query.toLowerCase();  
 
-            // 1. CONVERSATIONAL CHECK
+            // --- FEATURE 1: OPEN CALENDAR ---
+            if (qLower.includes('open calendar') || qLower.includes('open calander') || qLower.includes('show calendar')) {
+                showPanel('left');
+                const calElem = document.getElementById('calendar-list');
+                if (calElem) calElem.scrollIntoView({ behavior: 'smooth' });
+                speak("Opening your calendar now, Sir.");
+                return;
+            }
+
+            // --- FEATURE 2: OPEN APPLE MUSIC ---
+            if (qLower.includes('open apple music') || qLower.includes('play apple music')) {
+                speak("Opening Apple Music for you, Sir.");
+                window.open("https://music.apple.com", "_blank");
+                return;
+            }
+
+            // --- FEATURE 3: MOVE THIS TO THE OTHER SIDE OF THE SCREEN ---
+            if (qLower.includes('move this to the other side') || qLower.includes('move to the other side') || qLower.includes('swap sides') || qLower.includes('switch side')) {
+                const workspace = document.getElementById('workspace');
+                if (workspace.style.gridTemplateColumns === '380px 1fr 340px') {
+                    workspace.style.gridTemplateColumns = '340px 1fr 380px';
+                } else {
+                    workspace.style.gridTemplateColumns = '380px 1fr 340px';
+                }
+                speak("Reconfiguring interface layout to the opposite side, Sir.");
+                return;
+            }
+
+            // --- FEATURE 4: ENLARGE SOMETHING ---
+            if (qLower.includes('enlarge') || qLower.includes('make bigger') || qLower.includes('make larger')) {
+                if (qLower.includes('arc') || qLower.includes('reactor') || qLower.includes('logo')) {
+                    const arc = document.getElementById('arcReactor');
+                    arc.style.transform = arc.style.transform === 'scale(1.4)' ? 'scale(1)' : 'scale(1.4)';
+                    speak("Enlarging Arc Reactor core, Sir.");
+                } else if (qLower.includes('panel') || qLower.includes('workspace') || qLower.includes('screen')) {
+                    document.body.style.transform = document.body.style.transform === 'scale(1.1)' ? 'scale(1)' : 'scale(1.1)';
+                    speak("Enlarging main user interface view, Sir.");
+                } else {
+                    const cards = document.querySelectorAll('.response-card');
+                    if (cards.length > 0) {
+                        cards.forEach(card => card.classList.toggle('enlarged'));
+                        speak("Enlarging current active elements, Sir.");
+                    } else {
+                        speak("Specify what you would like me to enlarge, Sir.");
+                    }
+                }
+                return;
+            }
+
+            // --- FEATURE 5: CLEAR EVERYTHING ON THE SCREEN ---
+            if (qLower.includes('clear everything') || qLower.includes('clear screen') || qLower.includes('wipe screen')) {
+                document.getElementById('right-content').innerHTML = '<p style="opacity: 0.7;">Screen cleared. Standing by for instructions, Sir.</p>';
+                document.getElementById('log').innerText = "SYSTEM: Interface reset complete.";
+                document.body.style.transform = 'scale(1)';
+                const arc = document.getElementById('arcReactor');
+                if (arc) arc.style.transform = 'scale(1)';
+                speak("All screen elements and active feeds have been cleared, Sir.");
+                return;
+            }
+
+            // GREETING CHECK
             if (GREETINGS.includes(qLower.replace(/[^a-z0-9\s]/gi, '').trim())) {
                 const randomGreeting = GREETING_RESPONSES[Math.floor(Math.random() * GREETING_RESPONSES.length)];
                 speak(randomGreeting);
                 return;
             }
 
-            // 2. CALENDAR PARSING INTENT
+            // CALENDAR ADDING INTENT
             if (qLower.includes('add') && (qLower.includes('calendar') || qLower.includes('event') || qLower.includes('schedule') || qLower.includes('appointment'))) {
                 let cleanTitle = query.replace(/add/i, '').replace(/to (my |the )?calendar/i, '').replace(/schedule/i, '').trim();
                 let todayStr = new Date().toISOString().split('T')[0];
@@ -748,7 +844,7 @@
                 return;
             }
 
-            // 3. UNIVERSAL SEARCH (FETCH ANY TOPIC ACCURATELY)
+            // DEFAULT: UNIVERSAL SEARCH ENGINE
             speak("Accessing global database for " + query + ", Sir.");
             showPanel('right');
             document.getElementById('right-title').innerText = "RESULTS: " + query.toUpperCase();
@@ -760,7 +856,6 @@
         async function fetchUniversalKnowledge(query) {
             let cardResults = [];
 
-            // Attempt 1: Fetch via DuckDuckGo Instant Answer API
             try {
                 const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`;
                 const res = await fetch(ddgUrl);
@@ -789,7 +884,6 @@
                 }
             } catch (e) {}
 
-            // Attempt 2: Fetch via Wikipedia REST API fallback
             if (cardResults.length < 2) {
                 try {
                     const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
@@ -808,7 +902,6 @@
                 } catch (e) {}
             }
 
-            // Dynamic Fallback Generator if external network fails
             if (cardResults.length === 0) {
                 cardResults = [
                     { source: 'TELEMETRY SUMMARY', title: `Overview: ${query}`, snippet: `General metrics for ${query}.`, fullText: `Synthesized analysis completed for "${query}". Operational data nominal.` },
@@ -842,111 +935,54 @@
             speak(`I have retrieved parameters for your query, Sir.`);
         }
 
-        function escapeQuotes(str) {
-            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        }
-
-        function toggleExpand(event, btn, fullText) {
-            event.stopPropagation();
+        function toggleExpand(e, btn, fullText) {
+            e.stopPropagation();
             const card = btn.closest('.response-card');
-            const snippetDiv = card.querySelector('.card-snippet');
-
+            const snippet = card.querySelector('.card-snippet');
             if (card.classList.contains('enlarged')) {
                 card.classList.remove('enlarged');
-                snippetDiv.innerText = fullText.slice(0, 90) + '...';
                 btn.innerText = '[ ⛶ EXPAND ]';
+                snippet.innerText = fullText.slice(0, 90) + '...';
             } else {
                 card.classList.add('enlarged');
-                snippetDiv.innerText = fullText;
-                btn.innerText = '[ 🗕 COLLAPSE ]';
-                speak("Expanding display card.");
+                btn.innerText = '[ ⛶ COLLAPSE ]';
+                snippet.innerText = fullText;
             }
         }
 
-        /* DRAG ENGINE */
-        function makeElementDraggable(element) {
-            let isDragging = false, currentX = 0, currentY = 0, initialX = 0, initialY = 0;
+        function escapeQuotes(str) {
+            return str.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+        }
 
-            element.addEventListener("mousedown", dragStart);
-            element.addEventListener("touchstart", dragStart, {passive: false});
+        function makeElementDraggable(el) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            el.onmousedown = dragMouseDown;
 
-            function dragStart(e) {
+            function dragMouseDown(e) {
                 if (e.target.tagName === 'BUTTON') return;
-
-                if (element.style.position !== 'fixed') {
-                    const rect = element.getBoundingClientRect();
-                    element.style.position = 'fixed';
-                    element.style.top = rect.top + 'px';
-                    element.style.left = rect.left + 'px';
-                    element.style.width = rect.width + 'px';
-                }
-
-                if (e.type === "touchstart") {
-                    initialX = e.touches[0].clientX - currentX;
-                    initialY = e.touches[0].clientY - currentY;
-                } else {
-                    initialX = e.clientX - currentX;
-                    initialY = e.clientY - currentY;
-                }
-
-                isDragging = true;
-                document.addEventListener("mousemove", drag);
-                document.addEventListener("touchmove", drag, {passive: false});
-                document.addEventListener("mouseup", dragEnd);
-                document.addEventListener("touchend", dragEnd);
-            }
-
-            function drag(e) {
-                if (!isDragging) return;
                 e.preventDefault();
-
-                let clientX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
-                let clientY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
-
-                currentX = clientX - initialX;
-                currentY = clientY - initialY;
-
-                element.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
             }
 
-            function dragEnd() {
-                isDragging = false;
-                document.removeEventListener("mousemove", drag);
-                document.removeEventListener("touchmove", drag);
-                document.removeEventListener("mouseup", dragEnd);
-                document.removeEventListener("touchend", dragEnd);
+            function elementDrag(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                el.style.position = "relative";
+                el.style.top = (el.offsetTop - pos2) + "px";
+                el.style.left = (el.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
             }
         }
-
-        function showPanel(panelId) {  
-            const p = document.getElementById(panelId === 'left' ? 'left-panel' : 'right-panel');
-            if (p) p.style.display = 'block';  
-        }  
-
-        function startVoice() {  
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;  
-            if (!SpeechRecognition) {  
-                alert("Speech recognition is not supported in this browser.");  
-                return;  
-            }  
-
-            const recognition = new SpeechRecognition();  
-            recognition.lang = 'en-GB';  
-            recognition.start();  
-
-            const log = document.getElementById('log');  
-            if (log) log.innerText = "SYSTEM: Listening...";  
-
-            recognition.onresult = (event) => {  
-                const transcript = event.results[0][0].transcript;  
-                document.getElementById('userInput').value = transcript;  
-                processInput();  
-            };  
-
-            recognition.onerror = () => {  
-                speak("I didn't catch that, Sir.");  
-            };  
-        }  
     </script>  
 </body>  
 </html>
