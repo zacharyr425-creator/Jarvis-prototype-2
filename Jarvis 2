@@ -611,9 +611,9 @@
         </div>  
 
         <div class="terminal-area">  
-            <div id="log" class="log-box">SYSTEM: Standby mode active. Conversational mode online.</div>  
+            <div id="log" class="log-box">SYSTEM: Standby mode active. Permanent memory persistent.</div>  
             <div class="controls">  
-                <input type="text" id="userInput" placeholder="Ask anything or say 'open calendar', 'clear everything'..." onkeydown="if(event.key==='Enter') processInput()">  
+                <input type="text" id="userInput" placeholder="Ask anything or say 'remember my name is Tony'..." onkeydown="if(event.key==='Enter') processInput()">  
                 <button onclick="processInput()">SEND</button>  
                 <button onclick="startVoice()">MIC</button>  
             </div>  
@@ -622,10 +622,14 @@
 
     <script>  
         let availableVoices = [];  
-        let familyCalendar = [
+        
+        /* 100% PERMANENT MEMORY STORAGE INITIALIZATION */
+        let familyCalendar = JSON.parse(localStorage.getItem('jarvis_calendar')) || [
             { title: "Family Game Night", date: "2026-08-07" },
             { title: "Mom's Birthday", date: "2026-08-15" }
         ];
+
+        let jarvisMemory = JSON.parse(localStorage.getItem('jarvis_memory')) || {};
 
         const GREETINGS = [
             "hey jarvis", "hi jarvis", "hello jarvis", "jarvis", "hey", "hello", 
@@ -649,7 +653,7 @@
                 loader.style.opacity = '0';  
                 setTimeout(() => {  
                     loader.style.display = 'none';  
-                    speak("System online. Good day, Sir.");  
+                    speak("System online. Permanent memory restored. Good day, Sir.");  
                 }, 800);  
             }  
         }, 1500);  
@@ -705,6 +709,11 @@
             if (panel) panel.style.display = 'block';
         }
 
+        function saveStateToDisk() {
+            localStorage.setItem('jarvis_calendar', JSON.stringify(familyCalendar));
+            localStorage.setItem('jarvis_memory', JSON.stringify(jarvisMemory));
+        }
+
         function renderCalendar() {
             const list = document.getElementById('calendar-list');
             if (!list) return;
@@ -715,6 +724,7 @@
                 item.innerHTML = `<div class="event-title">${evt.title}</div><div class="event-date">📅 ${evt.date}</div>`;
                 list.appendChild(item);
             });
+            saveStateToDisk();
         }
 
         function addCalendarEventFromUI() {
@@ -766,6 +776,27 @@
 
             inputField.value = '';  
             const qLower = query.toLowerCase();  
+
+            // --- PERMANENT MEMORY COMMANDS ---
+            if (qLower.startsWith('remember ') || qLower.startsWith('save ')) {
+                const parts = query.replace(/remember|save/i, '').trim().split(/ as | is /i);
+                if (parts.length >= 2) {
+                    const key = parts[0].trim().toLowerCase();
+                    const value = parts[1].trim();
+                    jarvisMemory[key] = value;
+                    saveStateToDisk();
+                    speak(`Saved to permanent memory. ${key} is set to ${value}.`);
+                    return;
+                }
+            }
+
+            if (qLower.startsWith('what is ') || qLower.startsWith('recall ')) {
+                const key = qLower.replace(/what is|recall/i, '').replace(/[^a-z0-9\s]/gi, '').trim();
+                if (jarvisMemory[key]) {
+                    speak(`I remembered that ${key} is ${jarvisMemory[key]}.`);
+                    return;
+                }
+            }
 
             // --- FEATURE 1: OPEN CALENDAR ---
             if (qLower.includes('open calendar') || qLower.includes('open calander') || qLower.includes('show calendar')) {
@@ -845,23 +876,8 @@
                 return;
             }
 
-            // DEFAULT / FALLBACK SEARCH RESPONSE
-            showPanel('right');
-            const rightContent = document.getElementById('right-content');
-            
-            const newCard = document.createElement('div');
-            newCard.className = 'response-card';
-            newCard.innerHTML = `
-                <div class="card-source">DATABASE QUERY</div>
-                <div class="card-title">${query}</div>
-                <div class="card-snippet">Searching internal databases and external feeds for "${query}"...</div>
-                <div class="card-actions">
-                    <button class="expand-btn" onclick="this.closest('.response-card').classList.toggle('enlarged')">ENLARGE</button>
-                </div>
-            `;
-            
-            rightContent.prepend(newCard);
-            speak(`Searching database for ${query}, Sir.`);
+            // DEFAULT INTENT
+            speak(`Processing command: ${query}`);
         }
     </script>  
 </body>  
