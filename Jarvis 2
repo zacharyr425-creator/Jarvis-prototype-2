@@ -837,151 +837,31 @@
             // CALENDAR ADDING INTENT
             if (qLower.includes('add') && (qLower.includes('calendar') || qLower.includes('event') || qLower.includes('schedule') || qLower.includes('appointment'))) {
                 let cleanTitle = query.replace(/add/i, '').replace(/to (my |the )?calendar/i, '').replace(/schedule/i, '').trim();
-                let todayStr = new Date().toISOString().split('T')[0];
-                familyCalendar.push({ title: cleanTitle || "New Event", date: todayStr });
+                const today = new Date().toISOString().split('T')[0];
+                familyCalendar.push({ title: cleanTitle || "New Event", date: today });
                 renderCalendar();
-                speak(`I have scheduled "${cleanTitle || "New Event"}" on your family calendar, Sir.`);
+                showPanel('left');
+                speak(`Added ${cleanTitle || "New Event"} to your calendar, Sir.`);
                 return;
             }
 
-            // DEFAULT: UNIVERSAL SEARCH ENGINE
-            speak("Accessing global database for " + query + ", Sir.");
+            // DEFAULT / FALLBACK SEARCH RESPONSE
             showPanel('right');
-            document.getElementById('right-title').innerText = "RESULTS: " + query.toUpperCase();
-            document.getElementById('right-content').innerHTML = "<p>Retrieving data...</p>";
-
-            await fetchUniversalKnowledge(query);
-        }  
-
-        async function fetchUniversalKnowledge(query) {
-            let cardResults = [];
-
-            try {
-                const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`;
-                const res = await fetch(ddgUrl);
-                const data = await res.json();
-
-                if (data.AbstractText) {
-                    cardResults.push({
-                        source: 'PRIMARY SUMMARY',
-                        title: data.Heading || query,
-                        snippet: data.AbstractText.slice(0, 100) + '...',
-                        fullText: data.AbstractText
-                    });
-                }
-
-                if (data.RelatedTopics && data.RelatedTopics.length > 0) {
-                    data.RelatedTopics.slice(0, 3).forEach((item, idx) => {
-                        if (item.Text) {
-                            cardResults.push({
-                                source: `NETWORK FEED 0${idx + 1}`,
-                                title: `Related Data Point ${idx + 1}`,
-                                snippet: item.Text.slice(0, 90) + '...',
-                                fullText: item.Text
-                            });
-                        }
-                    });
-                }
-            } catch (e) {}
-
-            if (cardResults.length < 2) {
-                try {
-                    const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
-                    const res = await fetch(wikiUrl);
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data.extract) {
-                            cardResults.unshift({
-                                source: 'WIKIPEDIA CORE',
-                                title: data.title || query,
-                                snippet: data.extract.slice(0, 90) + '...',
-                                fullText: data.extract
-                            });
-                        }
-                    }
-                } catch (e) {}
-            }
-
-            if (cardResults.length === 0) {
-                cardResults = [
-                    { source: 'TELEMETRY SUMMARY', title: `Overview: ${query}`, snippet: `General metrics for ${query}.`, fullText: `Synthesized analysis completed for "${query}". Operational data nominal.` },
-                    { source: 'TACTICAL REPORT', title: `Deep Analysis: ${query}`, snippet: `Extended information breakdown.`, fullText: `Detailed breakdown indicates key relevancy points regarding "${query}".` }
-                ];
-            }
-
-            renderCards(cardResults);
-        }
-
-        function renderCards(cardList) {
             const rightContent = document.getElementById('right-content');
-            rightContent.innerHTML = '';
-
-            cardList.forEach((card) => {
-                const cardDiv = document.createElement('div');
-                cardDiv.className = 'response-card';
-                cardDiv.innerHTML = `
-                    <div class="card-source">${card.source}</div>
-                    <div class="card-title">${card.title}</div>
-                    <div class="card-snippet">${card.snippet}</div>
-                    <div class="card-actions">
-                        <button class="expand-btn" onclick="toggleExpand(event, this, '${escapeQuotes(card.fullText)}')">[ ⛶ EXPAND ]</button>
-                    </div>
-                `;
-
-                makeElementDraggable(cardDiv);
-                rightContent.appendChild(cardDiv);
-            });
-
-            speak(`I have retrieved parameters for your query, Sir.`);
-        }
-
-        function toggleExpand(e, btn, fullText) {
-            e.stopPropagation();
-            const card = btn.closest('.response-card');
-            const snippet = card.querySelector('.card-snippet');
-            if (card.classList.contains('enlarged')) {
-                card.classList.remove('enlarged');
-                btn.innerText = '[ ⛶ EXPAND ]';
-                snippet.innerText = fullText.slice(0, 90) + '...';
-            } else {
-                card.classList.add('enlarged');
-                btn.innerText = '[ ⛶ COLLAPSE ]';
-                snippet.innerText = fullText;
-            }
-        }
-
-        function escapeQuotes(str) {
-            return str.replace(/'/g, "\\'").replace(/"/g, "&quot;");
-        }
-
-        function makeElementDraggable(el) {
-            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-            el.onmousedown = dragMouseDown;
-
-            function dragMouseDown(e) {
-                if (e.target.tagName === 'BUTTON') return;
-                e.preventDefault();
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                document.onmouseup = closeDragElement;
-                document.onmousemove = elementDrag;
-            }
-
-            function elementDrag(e) {
-                e.preventDefault();
-                pos1 = pos3 - e.clientX;
-                pos2 = pos4 - e.clientY;
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                el.style.position = "relative";
-                el.style.top = (el.offsetTop - pos2) + "px";
-                el.style.left = (el.offsetLeft - pos1) + "px";
-            }
-
-            function closeDragElement() {
-                document.onmouseup = null;
-                document.onmousemove = null;
-            }
+            
+            const newCard = document.createElement('div');
+            newCard.className = 'response-card';
+            newCard.innerHTML = `
+                <div class="card-source">DATABASE QUERY</div>
+                <div class="card-title">${query}</div>
+                <div class="card-snippet">Searching internal databases and external feeds for "${query}"...</div>
+                <div class="card-actions">
+                    <button class="expand-btn" onclick="this.closest('.response-card').classList.toggle('enlarged')">ENLARGE</button>
+                </div>
+            `;
+            
+            rightContent.prepend(newCard);
+            speak(`Searching database for ${query}, Sir.`);
         }
     </script>  
 </body>  
