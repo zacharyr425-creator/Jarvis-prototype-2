@@ -3,7 +3,7 @@
 <head>  
     <meta charset="UTF-8">  
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
-    <title>J.A.R.V.I.S. Core Interface v5.0</title>  
+    <title>J.A.R.V.I.S. Core Interface v5.1</title>  
     <style>  
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');  
 
@@ -80,6 +80,7 @@
             flex-direction: column;  
             padding: 15px;  
             gap: 12px;  
+            position: relative;
         }  
 
         header {  
@@ -169,21 +170,28 @@
             box-shadow: none;
         }
 
-        /* RESPONSE CARD STYLING */
+        /* RESPONSE CARD STYLING & DRAGGING */
         .response-card {
             background: rgba(0, 240, 255, 0.08);
             border: 1px solid rgba(0, 240, 255, 0.4);
-            padding: 10px;
-            margin-bottom: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
             border-radius: 6px;
             cursor: grab;
-            transition: all 0.2s ease;
+            transition: background 0.2s, box-shadow 0.2s, width 0.3s, height 0.3s;
+            position: relative;
+            z-index: 20;
+            touch-action: none;
+        }
+
+        .response-card:active {
+            cursor: grabbing;
         }
 
         .response-card:hover {
             background: rgba(0, 240, 255, 0.18);
             border-color: #00f0ff;
-            box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
         }
 
         .response-card .card-source {
@@ -206,40 +214,43 @@
             color: #a2f2ff;
         }
 
-        /* READING OVERLAY MODAL */
-        #reading-modal {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 550px;
-            max-width: 90vw;
-            max-height: 70vh;
+        .card-actions {
+            margin-top: 10px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .expand-btn {
+            background: rgba(0, 240, 255, 0.2);
+            border: 1px solid #00f0ff;
+            color: #00f0ff;
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .expand-btn:hover {
+            background: #00f0ff;
+            color: #000;
+        }
+
+        /* ENLARGED STATE AFTER DRAGGING */
+        .response-card.enlarged {
+            width: 480px !important;
+            max-width: 80vw;
             background: rgba(2, 10, 25, 0.95);
             border: 2px solid #00f0ff;
-            box-shadow: 0 0 30px rgba(0, 240, 255, 0.5);
-            border-radius: 10px;
-            padding: 20px;
-            z-index: 100;
-            overflow-y: auto;
-            cursor: move;
-        }
-
-        #reading-modal h2 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.1rem;
-            color: #ffffff;
-            margin-bottom: 8px;
-            border-bottom: 1px solid #00f0ff;
-            padding-bottom: 5px;
-        }
-
-        #reading-modal-content {
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.6);
+            padding: 18px;
             font-size: 0.95rem;
             line-height: 1.6;
-            color: #e0ffff;
-            margin-top: 10px;
+        }
+
+        .response-card.enlarged .card-snippet {
+            color: #ffffff;
+            font-size: 0.9rem;
         }
 
         /* VITALS AND DIAGNOSTICS */
@@ -423,7 +434,7 @@
 
     <div id="loader">  
         <div class="loader-ring"></div>  
-        <div class="loader-text">INITIALIZING STARK HUD v5.0...</div>  
+        <div class="loader-text">INITIALIZING STARK HUD v5.1...</div>  
     </div>  
 
     <div id="hud-container">  
@@ -468,23 +479,15 @@
                     <button class="close-btn" onclick="closePanel('right-panel')">✕</button>
                 </div>
                 <div id="right-content">  
-                    <p style="opacity: 0.7;">Enter a query to generate multiple telemetry options...</p>
+                    <p style="opacity: 0.7;">Greetings, Sir. Type or speak to begin...</p>
                 </div>  
             </div>  
         </div>  
 
-        <div id="reading-modal">
-            <div class="panel-header">
-                <h3 id="modal-title">EXTRACTED TELEMETRY</h3>
-                <button class="close-btn" onclick="closeModal()">✕</button>
-            </div>
-            <div id="reading-modal-content">Select or drag a response option to inspect...</div>
-        </div>
-
         <div class="terminal-area">  
-            <div id="log" class="log-box">SYSTEM: Standby mode active. Multi-source engine ready.</div>  
+            <div id="log" class="log-box">SYSTEM: Standby mode active. Conversational mode online.</div>  
             <div class="controls">  
-                <input type="text" id="userInput" placeholder="Ask JARVIS, request news/sports, or ask to write..." onkeydown="if(event.key==='Enter') processInput()">  
+                <input type="text" id="userInput" placeholder="Say 'hey jarvis', ask a question, or request news..." onkeydown="if(event.key==='Enter') processInput()">  
                 <button onclick="processInput()">SEND</button>  
                 <button onclick="startVoice()">MIC</button>  
             </div>  
@@ -500,13 +503,27 @@
             foxnews: 'https://moxie.foxnews.com/google-publisher/latest.xml'
         };
 
+        // GREETING & SMALL TALK DICTIONARY
+        const GREETINGS = [
+            "hey jarvis", "hi jarvis", "hello jarvis", "jarvis", "hey", "hello", 
+            "good morning", "good evening", "good afternoon", "how are you", "whats up", "what's up"
+        ];
+
+        const GREETING_RESPONSES = [
+            "Hello Sir, what can I do for you today?",
+            "Hello Sir, how are you doing today?",
+            "At your service, Sir. What do you need?",
+            "Always a pleasure, Sir. How can I help?",
+            "Online and fully operational, Sir. How are you doing?"
+        ];
+
         setTimeout(() => {  
             const loader = document.getElementById('loader');  
             if (loader) {  
                 loader.style.opacity = '0';  
                 setTimeout(() => {  
                     loader.style.display = 'none';  
-                    speak("System online. Multi-response synthesis ready, Sir.");  
+                    speak("System online. Good day, Sir.");  
                 }, 800);  
             }  
         }, 1500);  
@@ -554,10 +571,6 @@
             document.getElementById(panelId).style.display = 'none';
         }
 
-        function closeModal() {
-            document.getElementById('reading-modal').style.display = 'none';
-        }
-
         async function processInput() {  
             const inputField = document.getElementById('userInput');  
             if (!inputField) return;  
@@ -565,14 +578,21 @@
             if (!query) return;  
 
             inputField.value = '';  
-            const qLower = query.toLowerCase();  
+            const qLower = query.toLowerCase().replace(/[^a-z0-9\s]/gi, '').trim();  
 
-            speak("Synthesizing 3 to 5 options for " + query + ", Sir.");
+            // 1. CONVERSATIONAL CHECK (Hey Jarvis / Greetings)
+            if (GREETINGS.includes(qLower)) {
+                const randomGreeting = GREETING_RESPONSES[Math.floor(Math.random() * GREETING_RESPONSES.length)];
+                speak(randomGreeting);
+                return;
+            }
+
+            // 2. INFORMATION/SEARCH QUERIES
+            speak("Retrieving telemetry options for " + query + ", Sir.");
             showPanel('right');
             document.getElementById('right-title').innerText = "OPTIONS: " + query.toUpperCase();
-            document.getElementById('right-content').innerHTML = "<p>Scanning primary and secondary channels...</p>";
+            document.getElementById('right-content').innerHTML = "<p>Scanning networks for 3-5 responses...</p>";
 
-            // Fetch multi-option responses
             if (qLower.includes('espn') || qLower.includes('news') || qLower.includes('sports') || qLower.includes('nfl')) {
                 await fetchMultiNews(query);
             } else {
@@ -580,7 +600,6 @@
             }
         }  
 
-        // Generate 3-5 news cards
         async function fetchMultiNews(query) {
             let rssUrl = FEEDS.espn;
             if (query.toLowerCase().includes('fox')) rssUrl = FEEDS.foxnews;
@@ -596,7 +615,7 @@
                     renderCards(items.map((item, idx) => ({
                         source: `OPTION 0${idx + 1} - LIVE FEED`,
                         title: item.title,
-                        snippet: item.description ? item.description.replace(/<[^>]*>?/gm, '').slice(0, 90) + '...' : 'Click to inspect full details.',
+                        snippet: item.description ? item.description.replace(/<[^>]*>?/gm, '').slice(0, 90) + '...' : 'Click expand to read full text.',
                         fullText: item.description ? item.description.replace(/<[^>]*>?/gm, '') : item.title
                     })));
                 } else {
@@ -607,7 +626,6 @@
             }
         }
 
-        // Generate 3-5 knowledge/general cards
         async function fetchMultiKnowledge(query) {
             let options = [];
             try {
@@ -626,7 +644,6 @@
                 }
             } catch (e) {}
 
-            // Fill remaining options up to 4
             const dynamicAngles = [
                 { source: 'OPTION 02 - STRATEGIC OVERVIEW', title: `Analytical Breakdown: ${query}`, snippet: `Core metrics and operational significance of ${query}.`, fullText: `Comprehensive overview of ${query}. Historical and structural parameters indicate high relevance to ongoing operational tasks.` },
                 { source: 'OPTION 03 - TECHNICAL TELEMETRY', title: `Data Diagnostics: ${query}`, snippet: `System metrics and technical parameters related to ${query}.`, fullText: `Technical specifications and sub-component evaluations for ${query}. All values calibrated within normal tolerances.` },
@@ -650,30 +667,103 @@
             const rightContent = document.getElementById('right-content');
             rightContent.innerHTML = '';
 
-            cardList.forEach((card, index) => {
+            cardList.forEach((card) => {
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'response-card';
                 cardDiv.innerHTML = `
                     <div class="card-source">${card.source}</div>
                     <div class="card-title">${card.title}</div>
                     <div class="card-snippet">${card.snippet}</div>
+                    <div class="card-actions">
+                        <button class="expand-btn" onclick="toggleExpand(event, this, '${escapeQuotes(card.fullText)}')">[ ⛶ EXPAND ]</button>
+                    </div>
                 `;
 
-                // Handle Click/Drag to pop out reading modal
-                cardDiv.onclick = () => openReadingModal(card.title, card.fullText);
+                // Enable Drag-to-Side functionality
+                makeElementDraggable(cardDiv);
                 
                 rightContent.appendChild(cardDiv);
             });
 
-            speak(`I have generated ${cardList.length} options. Click or drag any option to inspect it, Sir.`);
+            speak(`I have generated ${cardList.length} options, Sir. You can drag any card to the side and expand it.`);
         }
 
-        function openReadingModal(title, content) {
-            const modal = document.getElementById('reading-modal');
-            document.getElementById('modal-title').innerText = title;
-            document.getElementById('reading-modal-content').innerText = content;
-            modal.style.display = 'block';
-            speak("Displaying telemetry in full view.");
+        function escapeQuotes(str) {
+            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        function toggleExpand(event, btn, fullText) {
+            event.stopPropagation();
+            const card = btn.closest('.response-card');
+            const snippetDiv = card.querySelector('.card-snippet');
+
+            if (card.classList.contains('enlarged')) {
+                card.classList.remove('enlarged');
+                snippetDiv.innerText = fullText.slice(0, 90) + '...';
+                btn.innerText = '[ ⛶ EXPAND ]';
+            } else {
+                card.classList.add('enlarged');
+                snippetDiv.innerText = fullText;
+                btn.innerText = '[ 🗕 COLLAPSE ]';
+                speak("Expanding telemetry card.");
+            }
+        }
+
+        // DRAG ENGINE: DRAG ANY CARD ANYWHERE ON SCREEN
+        function makeElementDraggable(element) {
+            let isDragging = false, currentX = 0, currentY = 0, initialX = 0, initialY = 0;
+
+            element.addEventListener("mousedown", dragStart);
+            element.addEventListener("touchstart", dragStart, {passive: false});
+
+            function dragStart(e) {
+                if (e.target.tagName === 'BUTTON') return;
+
+                // Move card to absolute position relative to screen on first drag
+                if (element.style.position !== 'fixed') {
+                    const rect = element.getBoundingClientRect();
+                    element.style.position = 'fixed';
+                    element.style.top = rect.top + 'px';
+                    element.style.left = rect.left + 'px';
+                    element.style.width = rect.width + 'px';
+                }
+
+                if (e.type === "touchstart") {
+                    initialX = e.touches[0].clientX - currentX;
+                    initialY = e.touches[0].clientY - currentY;
+                } else {
+                    initialX = e.clientX - currentX;
+                    initialY = e.clientY - currentY;
+                }
+
+                isDragging = true;
+
+                document.addEventListener("mousemove", drag);
+                document.addEventListener("touchmove", drag, {passive: false});
+                document.addEventListener("mouseup", dragEnd);
+                document.addEventListener("touchend", dragEnd);
+            }
+
+            function drag(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+
+                let clientX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
+                let clientY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
+
+                currentX = clientX - initialX;
+                currentY = clientY - initialY;
+
+                element.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+            }
+
+            function dragEnd() {
+                isDragging = false;
+                document.removeEventListener("mousemove", drag);
+                document.removeEventListener("touchmove", drag);
+                document.removeEventListener("mouseup", dragEnd);
+                document.removeEventListener("touchend", dragEnd);
+            }
         }
 
         function showPanel(panelId) {  
@@ -705,38 +795,6 @@
                 speak("I didn't catch that, Sir.");  
             };  
         }  
-
-        // DRAG ENGINE FOR READING OVERLAY
-        const modal = document.getElementById("reading-modal");
-        let isDragging = false, currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0;
-
-        modal.addEventListener("mousedown", dragStart);
-        document.addEventListener("mouseup", dragEnd);
-        document.addEventListener("mousemove", drag);
-
-        function dragStart(e) {
-            if (e.target.tagName === 'BUTTON') return;
-            initialX = e.clientX - xOffset;
-            initialY = e.clientY - yOffset;
-            isDragging = true;
-        }
-
-        function dragEnd() {
-            initialX = currentX;
-            initialY = currentY;
-            isDragging = false;
-        }
-
-        function drag(e) {
-            if (isDragging) {
-                e.preventDefault();
-                currentX = e.clientX - initialX;
-                currentY = e.clientY - initialY;
-                xOffset = currentX;
-                yOffset = currentY;
-                modal.style.transform = `translate(calc(-50% + ${currentX}px), calc(-50% + ${currentY}px))`;
-            }
-        }
     </script>  
 </body>  
 </html>
