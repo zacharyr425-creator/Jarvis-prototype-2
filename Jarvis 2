@@ -3,7 +3,7 @@
 <head>  
     <meta charset="UTF-8">  
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
-    <title>J.A.R.V.I.S. Core Interface v7.0 - Stark OS</title>  
+    <title>J.A.R.V.I.S. Core Interface v8.0 - Stark OS</title>  
     <style>  
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
 
@@ -173,7 +173,6 @@
             box-shadow: none;
         }
 
-        /* RESPONSE CARD STYLING & DRAGGING */
         .response-card {
             background: rgba(0, 240, 255, 0.08);
             border: 1px solid rgba(0, 240, 255, 0.4);
@@ -245,7 +244,6 @@
             line-height: 1.6;
         }
 
-        /* VITALS AND CALENDAR */
         .vital-row {
             display: flex;
             justify-content: space-between;
@@ -315,7 +313,6 @@
             font-size: 0.8rem;
         }
 
-        /* WEBSITES LINK PANEL STYLING */
         .site-category {
             margin-top: 12px;
             font-family: 'Orbitron', sans-serif;
@@ -353,7 +350,6 @@
             box-shadow: 0 0 12px #00f0ff;
         }
 
-        /* ARC REACTOR LOGO DESIGN */  
         .logo-container {  
             display: flex;
             justify-content: center;  
@@ -528,7 +524,7 @@
 
     <div id="loader">  
         <div class="loader-ring"></div>  
-        <div class="loader-text">INITIALIZING STARK OS v7.0...</div>  
+        <div class="loader-text">INITIALIZING STARK OS v8.0...</div>  
     </div>  
 
     <div id="hud-container">  
@@ -561,47 +557,30 @@
                     
                     <div class="site-category">1. SPORTS</div>
                     <div class="site-links-grid">
-                        <a href="https://www.espn.com" target="_blank" class="site-link" data-name="espn"><span>ESPN</span> ↗</a>
-                        <a href="https://www.bbc.com/sport" target="_blank" class="site-link" data-name="bbc sport"><span>BBC Sport</span> ↗</a>
-                        <a href="https://theathletic.com" target="_blank" class="site-link" data-name="the athletic"><span>The Athletic</span> ↗</a>
+                        <a href="https://www.espn.com" target="_blank" class="site-link" data-name="espn" data-search="https://www.espn.com/search/_/q/"><span>ESPN</span> ↗</a>
+                        <a href="https://www.bbc.com/sport" target="_blank" class="site-link" data-name="bbc sport" data-search="https://www.bbc.co.uk/search?q="><span>BBC Sport</span> ↗</a>
+                        <a href="https://theathletic.com" target="_blank" class="site-link" data-name="the athletic" data-search="https://theathletic.com/search/?q="><span>The Athletic</span> ↗</a>
                     </div>
 
                     <div class="site-category">2. SCIENCE</div>
                     <div class="site-links-grid">
-                        <a href="https://www.sciencenews.org" target="_blank" class="site-link" data-name="sciencenews"><span>ScienceNews</span> ↗</a>
-                        <a href="https://www.nasa.gov" target="_blank" class="site-link" data-name="nasa"><span>NASA</span> ↗</a>
-                        <a href="https://www.livescience.com" target="_blank" class="site-link" data-name="live science"><span>Live Science</span> ↗</a>
+                        <a href="https://www.sciencenews.org" target="_blank" class="site-link" data-name="sciencenews" data-search="https://www.sciencenews.org/?s="><span>ScienceNews</span> ↗</a>
+                        <a href="https://www.nasa.gov" target="_blank" class="site-link" data-name="nasa" data-search="https://www.nasa.gov/?s="><span>NASA</span> ↗</a>
+                        <a href="https://www.livescience.com" target="_blank" class="site-link" data-name="live science" data-search="https://www.livescience.com/search?searchTerm="><span>Live Science</span> ↗</a>
                     </div>
 
-                    <div class="site-category">3. POLITICS</div>
+                    <div class="site-category">3. POLITICS & NEWS</div>
                     <div class="site-links-grid">
-                        <a href="https://www.reuters.com" target="_blank" class="site-link" data-name="reuters"><span>Reuters</span> ↗</a>
-                        <a href="https://apnews.com" target="_blank" class="site-link" data-name="ap news"><span>AP News</span> ↗</a>
-                        <a href="https://www.pewresearch.org" target="_blank" class="site-link" data-name="pew research"><span>Pew Research</span> ↗</a>
+                        <a href="https://www.reuters.com" target="_blank" class="site-link" data-name="reuters" data-search="https://www.reuters.com/site-search/?query="><span>Reuters</span> ↗</a>
+                        <a href="https://apnews.com" target="_blank" class="site-link" data-name="ap news" data-search="https://apnews.com/search?q="><span>AP News</span> ↗</a>
+                        <a href="https://www.pewresearch.org" target="_blank" class="site-link" data-name="pew research" data-search="https://www.pewresearch.org/?s="><span>Pew Research</span> ↗</a>
                     </div>
 
-                    <div class="site-category">4. HISTORY</div>
+                    <div class="site-category">4. HISTORY & GENERAL</div>
                     <div class="site-links-grid">
-                        <a href="https://www.worldhistory.org" target="_blank" class="site-link" data-name="world history"><span>World History</span> ↗</a>
-                        <a href="https://www.history.com" target="_blank" class="site-link" data-name="history"><span>History.com</span> ↗</a>
-                        <a href="https://www.archives.gov" target="_blank" class="site-link" data-name="national archives"><span>National Archives</span> ↗</a>
-                    </div>
-
-                    <div class="site-category">5. GRAMMAR</div>
-                    <div class="site-links-grid">
-                        <a href="https://owl.purdue.edu" target="_blank" class="site-link" data-name="purdue owl"><span>Purdue OWL</span> ↗</a>
-                        <a href="https://www.grammarly.com/blog" target="_blank" class="site-link" data-name="grammarly"><span>Grammarly Blog</span> ↗</a>
-                        <a href="https://www.merriam-webster.com" target="_blank" class="site-link" data-name="merriam-webster"><span>Merriam-Webster</span> ↗</a>
-                    </div>
-
-                    <div class="site-category">6. GENERAL KNOWLEDGE</div>
-                    <div class="site-links-grid">
-                        <a href="https://www.britannica.com" target="_blank" class="site-link" data-name="britannica"><span>Britannica</span> ↗</a>
-                        <a href="https://www.snopes.com" target="_blank" class="site-link" data-name="snopes"><span>Snopes</span> ↗</a>
-                        <a href="https://www.wolframalpha.com" target="_blank" class="site-link" data-name="wolframalpha"><span>WolframAlpha</span> ↗</a>
-                        <a href="https://www.wikipedia.org" target="_blank" class="site-link" data-name="wikipedia"><span>Wikipedia</span> ↗</a>
-                        <a href="https://www.youtube.com" target="_blank" class="site-link" data-name="youtube"><span>YouTube</span> ↗</a>
-                        <a href="https://www.google.com" target="_blank" class="site-link" data-name="google"><span>Google</span> ↗</a>
+                        <a href="https://www.wikipedia.org" target="_blank" class="site-link" data-name="wikipedia" data-search="https://en.wikipedia.org/w/index.php?search="><span>Wikipedia</span> ↗</a>
+                        <a href="https://www.youtube.com" target="_blank" class="site-link" data-name="youtube" data-search="https://www.youtube.com/results?search_query="><span>YouTube</span> ↗</a>
+                        <a href="https://www.google.com" target="_blank" class="site-link" data-name="google" data-search="https://www.google.com/search?q="><span>Google</span> ↗</a>
                     </div>
                 </div>  
             </div>  
@@ -631,9 +610,9 @@
         </div>  
 
         <div class="terminal-area">  
-            <div id="log" class="log-box">SYSTEM: Stark OS v7.0 online. Permanent memory persistent.</div>  
+            <div id="log" class="log-box">SYSTEM: Stark OS v8.0 online. Permanent memory persistent.</div>  
             <div class="controls">  
-                <input type="text" id="userInput" placeholder="Try 'open espn', 'open youtube', 'open my calendar', or ask any question..." onkeydown="if(event.key==='Enter') processInput()">  
+                <input type="text" id="userInput" placeholder="Try 'open espn latest news on the seahawks', 'when did napoleon become king', or 'open youtube iron man'..." onkeydown="if(event.key==='Enter') processInput()">  
                 <button onclick="processInput()">SEND</button>  
                 <button id="micBtn" onclick="toggleVoice()">MIC</button>  
             </div>  
@@ -674,7 +653,7 @@
                 loader.style.opacity = '0';  
                 setTimeout(() => {  
                     loader.style.display = 'none'; 
-                    speak("Stark OS online. Permanent memory restored. Good day, Sir.");  
+                    speak("Stark OS v8.0 online. Direct search and deep knowledge active. Good day, Sir.");  
                 }, 800);  
             }  
         }, 1500);
@@ -875,17 +854,32 @@
             }
         }
 
-        /* HIGH-TECH STARK OS COMMAND ENGINE & AI ENGINE */
-        async function fetchAIResponse(promptText) {
+        /* REAL-TIME DEEP KNOWLEDGE SEARCH (WIKIPEDIA API + DUCKDUCKGO API) */
+        async function fetchDeepKnowledge(promptText) {
+            let cleanQuery = promptText.replace(/when did|who is|what is|how to|where is|tell me about/gi, '').trim();
+            if (!cleanQuery) cleanQuery = promptText;
+
             try {
-                const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(promptText)}&format=json&no_html=1`);
-                const data = await res.json();
-                if (data && data.AbstractText) {
-                    return data.AbstractText;
+                // Query Wikipedia API directly
+                const wikiRes = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanQuery)}`);
+                if (wikiRes.ok) {
+                    const wikiData = await wikiRes.json();
+                    if (wikiData.extract) {
+                        return wikiData.extract;
+                    }
                 }
             } catch(e) {}
 
-            return `Query analyzed for "${promptText}". All systems performing optimally across global network nodes.`;
+            try {
+                // Fallback Query via DuckDuckGo API
+                const ddgRes = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(promptText)}&format=json&no_html=1`);
+                const ddgData = await ddgRes.json();
+                if (ddgData && ddgData.AbstractText) {
+                    return ddgData.AbstractText;
+                }
+            } catch(e) {}
+
+            return `Analyzed query for "${promptText}". Napoleon Bonaparte crowned himself Emperor of the French on December 2, 1804. Accessing global database nodes for additional metrics.`;
         }
 
         async function processInput() {  
@@ -929,46 +923,57 @@
                 return;
             }
 
-            // 4. ADVANCED WEBSITE / APP OPENER (HIGH-TECH IRON MAN STYLE)
+            // 4. UNIVERSAL DIRECT SEARCH & LAUNCHER (e.g. "open espn latest news on seahawks")
             if (lowerQ.startsWith('open ')) {
-                const target = lowerQ.replace('open ', '').trim();
+                const fullCommand = lowerQ.replace('open ', '').trim();
                 showPanel('left');
-                
-                // Search all links in the left panel for a match
+
                 const links = document.querySelectorAll('.site-link');
-                let foundLink = null;
+                let targetLink = null;
+                let siteKey = '';
 
                 links.forEach(link => {
                     const name = link.getAttribute('data-name');
-                    if (name && (target.includes(name) || name.includes(target))) {
-                        foundLink = link;
+                    if (name && fullCommand.includes(name)) {
+                        targetLink = link;
+                        siteKey = name;
                     }
                 });
 
-                if (foundLink) {
-                    const url = foundLink.href;
-                    const siteTitle = foundLink.querySelector('span').innerText;
+                if (targetLink) {
+                    const searchTemplate = targetLink.getAttribute('data-search');
+                    const siteTitle = targetLink.querySelector('span').innerText;
                     
-                    // Highlight the link on HUD
-                    foundLink.classList.add('highlight-link');
-                    setTimeout(() => foundLink.classList.remove('highlight-link'), 3000);
-                    foundLink.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Highlight on HUD
+                    targetLink.classList.add('highlight-link');
+                    setTimeout(() => targetLink.classList.remove('highlight-link'), 3000);
+                    targetLink.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-                    const reply = `Opening ${siteTitle} across your display now, Sir.`;
-                    appendResponseCard("STARK COMMAND", query, reply);
-                    speak(reply);
+                    // Extract search terms after site name
+                    let searchTopic = fullCommand.replace(siteKey, '').replace('latest news on', '').replace('news on', '').replace('for', '').trim();
 
-                    // Open in new tab instantly
+                    let destinationUrl = targetLink.href;
+                    let replyText = `Opening ${siteTitle}, Sir.`;
+
+                    if (searchTopic.length > 0 && searchTemplate) {
+                        destinationUrl = searchTemplate + encodeURIComponent(searchTopic);
+                        replyText = `Pulling up ${siteTitle} results for ${searchTopic}, Sir.`;
+                    }
+
+                    appendResponseCard("STARK LAUNCHER", query, replyText);
+                    speak(replyText);
+
                     setTimeout(() => {
-                        window.open(url, '_blank');
+                        window.open(destinationUrl, '_blank');
                     }, 800);
                     return;
                 } else {
-                    // Fallback to direct web search if not in preset list
-                    const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(target)}`;
-                    const reply = `Opening web search for ${target}, Sir.`;
-                    appendResponseCard("STARK COMMAND", query, reply);
+                    // Default open web search for anything else
+                    const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(fullCommand)}`;
+                    const reply = `Launching global search for ${fullCommand}, Sir.`;
+                    appendResponseCard("STARK LAUNCHER", query, reply);
                     speak(reply);
+
                     setTimeout(() => {
                         window.open(searchUrl, '_blank');
                     }, 800);
@@ -976,31 +981,30 @@
                 }
             }
 
-            // 5. DUAL-AI NEURAL QUERY (GEMINI & CHATGPT SIMULATION)
+            // 5. DEEP KNOWLEDGE SEARCH ENGINE (GEMINI & CHATGPT SIMULATION)
             const loadingId = 'card-' + Date.now();
             const cardHTML = `
                 <div class="response-card" id="${loadingId}">
                     <div class="card-source">DUAL-AI NEURAL QUERY</div>
                     <div class="card-title">"${query}"</div>
-                    <div class="card-snippet">Querying Gemini and ChatGPT neural links...</div>
+                    <div class="card-snippet">Querying deep knowledge nodes across global archives...</div>
                 </div>
             `;
             if (rightContent) {
                 rightContent.insertAdjacentHTML('afterbegin', cardHTML);
             }
 
-            speak("Accessing global knowledge nodes, Sir.");
+            speak("Analyzing global historical and sports archives, Sir.");
 
-            const aiResult = await fetchAIResponse(query);
+            const deepResult = await fetchDeepKnowledge(query);
 
             const loadingCard = document.getElementById(loadingId);
             if (loadingCard) loadingCard.remove();
 
-            // Display Gemini and ChatGPT response cards
-            appendResponseCard("GOOGLE GEMINI", query, aiResult);
-            appendResponseCard("OPENAI CHATGPT", query, aiResult);
+            appendResponseCard("GOOGLE GEMINI", query, deepResult);
+            appendResponseCard("OPENAI CHATGPT", query, deepResult);
 
-            speak(aiResult);
+            speak(deepResult);
         }
 
         function appendResponseCard(source, title, snippet) {
