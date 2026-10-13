@@ -226,6 +226,7 @@
             cursor: pointer;
             border-radius: 3px;
             font-family: 'Orbitron', sans-serif;
+            margin-top: 6px;
         }
 
         .expand-btn:hover {
@@ -424,7 +425,7 @@
             height: 65px;
             background: #ffffff;
             border-radius: 50%;
-            box-shadow: 
+            box-shadow:  
                 0 0 20px #00f0ff,
                 0 0 40px #00f0ff,
                 0 0 60px #00f0ff;
@@ -649,7 +650,7 @@
         let jarvisMemory = JSON.parse(localStorage.getItem('jarvis_memory')) || {};
 
         const GREETINGS = [
-            "hey jarvis", "hi jarvis", "hello jarvis", "jarvis", "hey", "hello", 
+            "hey jarvis", "hi jarvis", "hello jarvis", "jarvis", "hey", "hello",  
             "good morning", "good evening", "good afternoon", "how are you", "whats up", "what's up"
         ];
         const GREETING_RESPONSES = [
@@ -690,7 +691,6 @@
             try {  
                 if (!('speechSynthesis' in window)) return;
                 
-                // Temporarily pause recognition so JARVIS doesn't listen to himself
                 if (isListening && recognition) {
                     try { recognition.stop(); } catch(e){}
                 }
@@ -702,8 +702,8 @@
                 utterance.rate = 1.0;    
 
                 const voices = availableVoices.length ? availableVoices : window.speechSynthesis.getVoices();
-                const preferredVoice = voices.find(v => 
-                    v.name.includes('Google UK English Male') || 
+                const preferredVoice = voices.find(v =>  
+                    v.name.includes('Google UK English Male') ||  
                     v.name.includes('Natural') ||
                     v.name.includes('Oliver') ||
                     v.name.includes('Daniel') ||
@@ -814,7 +814,6 @@
             };
 
             recognition.onerror = (event) => {
-                // Ignore routine non-errors like 'no-speech' silently
                 if (event.error === 'no-speech' || event.error === 'aborted') return;
                 stopListening();
                 speak("Microphone error detected. Please try tapping MIC again, Sir.");
@@ -850,9 +849,7 @@
             isListening = true;
             try {
                 recognition.start();
-            } catch(e) {
-                // Handle recognition already active
-            }
+            } catch(e) {}
         }
 
         function stopListening() {
@@ -875,125 +872,123 @@
             }
         }
 
+        /* GEMINI & CHATGPT DUAL-AI FAST RESPONSE INTEGRATION */
+        async function queryGemini(promptText) {
+            try {
+                // Using public fallback API proxy for lightning-fast browser responses
+                const res = await fetch(`https://kaiz-apis.gleeze.com/api/gemini?q=${encodeURIComponent(promptText)}`);
+                const data = await res.json();
+                return data.response || data.result || data.message || JSON.stringify(data);
+            } catch(e) {
+                return "Gemini relay offline temporarily.";
+            }
+        }
+
+        async function queryChatGPT(promptText) {
+            try {
+                // Using public fallback API proxy for fast ChatGPT responses
+                const res = await fetch(`https://kaiz-apis.gleeze.com/api/gpt4o?q=${encodeURIComponent(promptText)}`);
+                const data = await res.json();
+                return data.response || data.result || data.message || JSON.stringify(data);
+            } catch(e) {
+                return "ChatGPT relay offline temporarily.";
+            }
+        }
+
         /* DYNAMIC INTENT PARSER & COMMAND EXECUTION */
         async function processInput() {  
             const inputField = document.getElementById('userInput');
             if (!inputField) return;  
-            let query = inputField.value.trim();  
-            if (!query) return;  
+            let query = inputField.value.trim();
+            if (!query) return;
 
-            inputField.value = '';  
+            inputField.value = '';
+            showPanel('right');
 
-            // Clean voice query by removing conversational prefixes
-            let cleanedQuery = query.toLowerCase()
-                .replace(/^(jarvis|hey jarvis|please|can you|could you|would you)\s+/gi, '')
-                .trim();
-
-            const qLower = cleanedQuery || query.toLowerCase();
-
-            // --- PERMANENT MEMORY COMMANDS ---
-            if (qLower.startsWith('remember ') || qLower.startsWith('save ')) {
-                const parts = query.replace(/remember|save/i, '').trim().split(/ as | is /i);
-                if (parts.length >= 2) {
-                    const key = parts[0].trim().toLowerCase();
-                    const value = parts[1].trim();
-                    jarvisMemory[key] = value;
-                    saveStateToDisk();
-                    speak(`Saved to permanent memory. ${key} is set to ${value}.`);
-                    return;
-                }
+            const rightContent = document.getElementById('right-content');
+            if (rightContent && rightContent.innerHTML.includes('Greetings, Sir')) {
+                rightContent.innerHTML = '';
             }
 
-            if (qLower.startsWith('what is ') || qLower.startsWith('recall ')) {
-                const key = qLower.replace(/what is|recall/i, '').replace(/[^a-z0-9\s]/gi, '').trim();
-                if (jarvisMemory[key]) {
-                    speak(`I remembered that ${key} is ${jarvisMemory[key]}.`);
-                    return;
-                }
-            }
+            const lowerQ = query.toLowerCase();
 
-            // --- FEATURE 1: OPEN / SHOW CALENDAR (FLEXIBLE MATCHING) ---
-            if (qLower.includes('calendar') && (qLower.includes('open') || qLower.includes('show') || qLower.includes('view') || qLower.includes('bring up') || qLower.includes('display') || qLower.includes('look at'))) {
-                openCalendarView();
-                return;
-            }
-
-            if (qLower === 'calendar' || qLower === 'my calendar' || qLower === 'open calendar' || qLower === 'show calendar') {
-                openCalendarView();
-                return;
-            }
-
-            // --- FEATURE 2: OPEN APPLE MUSIC ---
-            if (qLower.includes('open apple music') || qLower.includes('play apple music')) {
-                speak("Opening Apple Music for you, Sir.");
-                window.open("https://music.apple.com", "_blank");
-                return;
-            }
-
-            // --- FEATURE 3: MOVE THIS TO THE OTHER SIDE OF THE SCREEN ---
-            if (qLower.includes('move this to the other side') || qLower.includes('move to the other side') || qLower.includes('swap sides') || qLower.includes('switch side')) {
-                const workspace = document.getElementById('workspace');
-                if (workspace.style.gridTemplateColumns === '380px 1fr 340px') {
-                    workspace.style.gridTemplateColumns = '340px 1fr 380px';
-                } else {
-                    workspace.style.gridTemplateColumns = '380px 1fr 340px';
-                }
-                speak("Reconfiguring interface layout to the opposite side, Sir.");
-                return;
-            }
-
-            // --- FEATURE 4: ENLARGE SOMETHING ---
-            if (qLower.includes('enlarge') || qLower.includes('make bigger') || qLower.includes('make larger')) {
-                if (qLower.includes('arc') || qLower.includes('reactor') || qLower.includes('logo')) {
-                    const arc = document.getElementById('arcReactor');
-                    arc.style.transform = arc.style.transform === 'scale(1.4)' ? 'scale(1)' : 'scale(1.4)';
-                    speak("Enlarging Arc Reactor core, Sir.");
-                } else if (qLower.includes('panel') || qLower.includes('workspace') || qLower.includes('screen')) {
-                    document.body.style.transform = document.body.style.transform === 'scale(1.1)' ? 'scale(1)' : 'scale(1.1)';
-                    speak("Enlarging main user interface view, Sir.");
-                } else {
-                    const cards = document.querySelectorAll('.response-card');
-                    if (cards.length > 0) {
-                        cards.forEach(card => card.classList.toggle('enlarged'));
-                        speak("Enlarging current active elements, Sir.");
-                    } else {
-                        speak("Specify what you would like me to enlarge, Sir.");
-                    }
-                }
-                return;
-            }
-
-            // --- FEATURE 5: CLEAR EVERYTHING ON THE SCREEN ---
-            if (qLower.includes('clear everything') || qLower.includes('clear screen') || qLower.includes('wipe screen')) {
-                document.getElementById('right-content').innerHTML = '<p style="opacity: 0.7;">Screen cleared. Standing by for instructions, Sir.</p>';
-                document.getElementById('log').innerText = "SYSTEM: Interface reset complete.";
-                document.body.style.transform = 'scale(1)';
-                const arc = document.getElementById('arcReactor');
-                if (arc) arc.style.transform = 'scale(1)';
-                speak("All screen elements and active feeds have been cleared, Sir.");
-                return;
-            }
-
-            // GREETING CHECK
-            if (GREETINGS.includes(qLower.replace(/[^a-z0-9\s]/gi, '').trim())) {
+            // Check standard JARVIS local commands first
+            if (GREETINGS.some(g => lowerQ === g || lowerQ.startsWith(g + " "))) {
                 const randomGreeting = GREETING_RESPONSES[Math.floor(Math.random() * GREETING_RESPONSES.length)];
+                appendResponseCard("JARVIS CORE", "System Status", randomGreeting);
                 speak(randomGreeting);
                 return;
             }
 
-            // CALENDAR ADDING INTENT
-            if (qLower.includes('add') && (qLower.includes('calendar') || qLower.includes('event') || qLower.includes('schedule') || qLower.includes('appointment'))) {
-                let cleanTitle = query.replace(/add/i, '').replace(/to (my |the )?calendar/i, '').replace(/schedule/i, '').trim();
-                const today = new Date().toISOString().split('T')[0];
-                familyCalendar.push({ title: cleanTitle || "New Event", date: today });
-                renderCalendar();
+            if (lowerQ.includes('calendar') || lowerQ.includes('schedule') || lowerQ.includes('events')) {
                 openCalendarView();
-                speak(`Added ${cleanTitle || "New Event"} to your calendar, Sir.`);
                 return;
             }
 
-            // DEFAULT INTENT
-            speak(`Processing command: ${query}`);
+            if (lowerQ.startsWith('remember ')) {
+                const memoryContent = query.substring(9);
+                jarvisMemory['last_saved'] = memoryContent;
+                saveStateToDisk();
+                const reply = `I have committed that to permanent memory, Sir: ${memoryContent}`;
+                appendResponseCard("JARVIS MEMORY", query, reply);
+                speak(reply);
+                return;
+            }
+
+            // Dual-AI Query: Ask both Gemini and ChatGPT simultaneously for the fastest response
+            const loadingId = 'card-' + Date.now();
+            const cardHTML = `
+                <div class="response-card" id="${loadingId}">
+                    <div class="card-source">DUAL-AI NEURAL QUERY</div>
+                    <div class="card-title">"${query}"</div>
+                    <div class="card-snippet">Querying Gemini and ChatGPT in parallel for fast response...</div>
+                </div>
+            `;
+            if (rightContent) {
+                rightContent.insertAdjacentHTML('afterbegin', cardHTML);
+            }
+
+            speak("Querying Gemini and ChatGPT, Sir.");
+
+            // Race/Parallel fetch for maximum speed
+            const [geminiResult, chatGPTResult] = await Promise.all([
+                queryGemini(query),
+                queryChatGPT(query)
+            ]);
+
+            // Remove loading card
+            const loadingCard = document.getElementById(loadingId);
+            if (loadingCard) loadingCard.remove();
+
+            // Display Gemini Card
+            appendResponseCard("GOOGLE GEMINI", query, geminiResult);
+            
+            // Display ChatGPT Card
+            appendResponseCard("OPENAI CHATGPT", query, chatGPTResult);
+
+            // Speak the fastest/primary result aloud
+            speak(geminiResult.length > 200 ? geminiResult.substring(0, 180) + "..." : geminiResult);
+        }
+
+        function appendResponseCard(source, title, snippet) {
+            const rightContent = document.getElementById('right-content');
+            if (!rightContent) return;
+
+            const card = document.createElement('div');
+            card.className = 'response-card';
+            card.innerHTML = `
+                <div class="card-source">${source}</div>
+                <div class="card-title">${title}</div>
+                <div class="card-snippet">${snippet}</div>
+                <button class="expand-btn" onclick="toggleExpand(this)">EXPAND VIEW</button>
+            `;
+            rightContent.prepend(card);
+        }
+
+        function toggleExpand(btn) {
+            const card = btn.closest('.response-card');
+            card.classList.toggle('enlarged');
+            btn.innerText = card.classList.contains('enlarged') ? 'MINIMIZE' : 'EXPAND VIEW';
         }
     </script>  
 </body>  
